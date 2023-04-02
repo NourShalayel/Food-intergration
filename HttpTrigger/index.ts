@@ -1,18 +1,21 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
-import { Tables } from "../Common/Constant/Tables";
-import { DB_ORM } from "../Helper/DB";
+import { JsonConvert } from "json2typescript";
+import moment = require("moment");
+import { MethodEnum } from "../Common/Enums/Method.enum";
+import { SystemUrl } from "../Common/Enums/SystemEndPoint";
+import { DB } from "../Helper/DB";
+import { RevelSendRequest } from "../Helper/sendRequest";
+import { Utils } from "../Helper/Utils";
+import { ICustomMenu, IMenu } from "../Interface/ICustomMenu.interface";
 import { IAccountConfig } from "../Interface/IAccountConfig";
-import { Establishments, establishmentTable } from "../models/Establishments";
+import { ICategories, ICategory, IFoodbitMenu, IRevelMenu, IRevelProduct } from "../Interface/IMenu.interface";
 
-
-// get all data
 const httpTrigger: AzureFunction = async function (
     context: Context,
     req: HttpRequest
 ): Promise<void> {
-
     try {
-        console.log(req.headers);
+
         const schemaName: string | undefined = req.headers.schemaname;
 
         if (!schemaName) {
@@ -23,220 +26,98 @@ const httpTrigger: AzureFunction = async function (
             return;
         }
 
-        const id: number = Number(req.headers.id);
-        // const establishment = DB_ORM.establishment(schemaName).establishment;
+        // get revelAccount from header to get schemaName from database 
+        const account: string | undefined = req.headers.revelaccount;
+        if (!account) {
+            context.res = {
+                status: 400,
+                body: "Missing RevelAccount header in the request"
+            };
+            return;
+        }
 
-        // intialize table => get schemaName
-        const test  = establishmentTable.schema(schemaName);
+        // get accountconfig and customMenu from database 
+        const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
+        const CustomMenu: ICustomMenu[] = await DB.getCustomMenu(accountConfig.SchemaName)
 
-        // const getAllEstablishments = await establishment.findAll();
+        const baseURL: string = `https://${accountConfig.RevelAccount}.revelup.com/`
+
+        //get data from revel based on customMenu name and establishment 
+        const AllCustommenu  : IMenu[]= await Promise.all(CustomMenu.map(async element => {
+            const menus = await RevelSendRequest({
+                url: `${baseURL}${SystemUrl.REVELMENU}?establishment= ${element.LocationId}&name=${element.MenuName}`,
+                headers: { contentType: "application/json", token: `${accountConfig.RevelAuth}` },
+                method: MethodEnum.GET,
+            });
+            const AllMenus: IMenu = {
+                LocationId: element.LocationId,
+                MenuName: element.MenuName,
+                data: menus
+            }
+            return AllMenus;
+        }));
 
 
-        const getAllEstablishments = await test.findAll();
-        //    console.log(getAllEstablishments);
+        // prepaer payload to post foodbit 
 
-
-        const data: Establishments = JSON.parse(JSON.stringify(getAllEstablishments, null, 2));
         context.res = {
             status: 200,
-            body: data ,
+            body: AllCustommenu,
             headers: {
                 'Content-Type': 'application/json'
-              },
+            },
         };
-    } catch (error) {
 
-        console.error(error);
-        context.res = {
-            status: context.res.status,
+        //get all categories 
+
+
+        // prepare payload 
+        // const menu = allMenu.categories.map((data) => {
+        //     const categories: ICategories[] = [{
+        //         merchantId: merchantId,
+        //         items: data.products.map((item) => ({
+        //             id: item.id.toString(),
+        //             createdDate: date.toString(),
+        //             notTaxable: false,
+        //             merchantId: merchantId,
+        //             calories: 200,
+        //             total: item.cost,
+        //             price: item.price,
+        //         })),
+        //         nameEn: data.name,
+        //         itemsCount: data.products.length
+        //     }]
+
+        //     const foodbitData: IFoodbitMenu = {
+        //         id: (data.id).toString(),
+        //         createdDate: date.toString(),
+        //         lastUpdated: date.toString(),
+        //         merchantId: merchantId,
+        //         entityType: "MENU",
+        //         isDefault: false,
+        //         isHidden: false,
+        //         categories: categories,
+        //         availability: undefined
+        //     }
+        //     return foodbitData;
+        // })
+        // context.res = {
+        //     status: 200,
+        //     body: categories,
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //     },
+        // };
+
+    } catch (error) {
+        console.error(error); context.res =
+        {
+            status:
+                context.res.status,
             body: error
         };
     }
 };
-
-// create new establishment
-const createEstablishment: AzureFunction = async function (
-    context: Context,
-    req: HttpRequest
-): Promise<void> {
-
-    try {
-        console.log(req.headers);
-
-        // get schemaName from header
-        const schemaName: string | undefined = req.headers.schemaname;
-
-        if (!schemaName) {
-            context.res = {
-                status: 400,
-                body: "Missing schemaName header in the request"
-            };
-            return;
-        }
-
-        // get data from body request and parse json
-        const dataReq = req.body
-        const data: Establishments = JSON.parse(JSON.stringify(dataReq, null, 2));
-
-        // pass schemaName
-        const establishment =  (await DB_ORM.establishment(schemaName)).establishment ;
-
-        // use sequlize to create
-        const createEst = await establishment.create({ ...data });
-        createEst.save();
-        context.res = {
-            status: 200,
-            body: createEst
-        }
-
-    } catch (error) {
-        console.error(error);
-        context.res = {
-            status: context.res.status,
-            body: error
-        }
-    }
-
-
-}
-
-// update establishment
-const updateEstablishment: AzureFunction = async function (
-    context: Context,
-    req: HttpRequest
-): Promise<void> {
-
-    try {
-        console.log(req.headers);
-
-        // get schemaName from header
-        const id: number = Number(req.headers.id);
-        const schemaName: string | undefined = req.headers.schemaname;
-
-        if (!schemaName) {
-            context.res = {
-                status: 400,
-                body: "Missing schemaName header in the request"
-            };
-            return;
-        }
-
-        // get data from body request and parse json
-        const dataReq = req.body
-        const data: Establishments = JSON.parse(JSON.stringify(dataReq, null, 2));
-
-        // pass schemaName
-        const establishment = (await DB_ORM.establishment(schemaName)).establishment ;
-
-        // update establishment
-        await establishment.update(
-            { ...data },
-            {
-                where: { id: id }
-            }
-
-        );
-
-        context.res = {
-            status: 200,
-            body: "Updated Successfully"
-        }
-
-    } catch (error) {
-        console.error(error);
-        context.res = {
-            status: context.res.status,
-            body: error
-        }
-    }
-}
-
-
-// remove establishment
-const deleteEstablishment: AzureFunction = async function (
-    context: Context,
-    req: HttpRequest
-): Promise<void> {
-
-    try {
-        console.log(req.headers);
-
-        // get schemaName from header
-        const id: number = Number(req.headers.id);
-        const schemaName: string | undefined = req.headers.schemaname;
-
-        if (!schemaName) {
-            context.res = {
-                status: 400,
-                body: "Missing schemaName header in the request"
-            };
-            return;
-        }
-
-        // pass schemaName
-        const establishment =  (await DB_ORM.establishment(schemaName)).establishment ;
-
-        await establishment.destroy({
-            where: { id: id },
-        });
-
-        context.res = {
-            status: 200,
-            body: "Deleted Successfully"
-        }
-
-    } catch (error) {
-        console.error(error);
-        context.res = {
-            status: context.res.status,
-            body: error
-        }
-    }
-}
-
-
-// get all data b use query
-const getByQuery: AzureFunction = async function (
-    context: Context,
-    req: HttpRequest
-): Promise<void> {
-
-    try {
-        console.log(req.headers);
-
-        // get schemaName from header
-        const id: number = Number(req.headers.id);
-        const schemaName: string | undefined = req.headers.schemaname;
-
-        if (!schemaName) {
-            context.res = {
-                status: 400,
-                body: "Missing schemaName header in the request"
-            };
-            return;
-        }
-
-        // pass schemaName to get data
-
-        const establishment = (await DB_ORM.establishment(schemaName)).establishment ;
-
-        const data: Establishments = JSON.parse(JSON.stringify(establishment, null, 2));
-        console.log(data);
-
-        context.res = {
-            status: 200,
-            body: establishment
-        }
-
-    } catch (error) {
-        console.error(error);
-        context.res = {
-            status: context.res.status,
-            body: error
-        }
-    }
-
-}
 export default httpTrigger;
 
 
