@@ -1,32 +1,29 @@
 import { sequelize } from "../../sequlizeConfig";
 import { DataType } from "sequelize-typescript";
 
-export const IMenuMappingTable = sequelize.define(
-  "Menus",
+
+export const ICategoryMappingTable = sequelize.define(
+  "Categories",
   {
     revelId: { type: DataType.STRING, primaryKey: true },
     foodbitId: DataType.STRING,
-    categoryIds: DataType.STRING,
+    itemIds: DataType.STRING,
     nameEn: DataType.STRING,
     nameAr: DataType.STRING,
-    isDefault: DataType.BOOLEAN,
-    isHidden: DataType.BOOLEAN,
-    categoriesCount: DataType.STRING,
+    menuId : DataType.STRING,
     createdDate: DataType.STRING,
     updatedDate: DataType.STRING,
   },
   { createdAt: false, updatedAt: false }
 );
 
-export interface IMenuMapping {
+export interface ICategoryMapping {
   revelId: string;
   foodbitId: string;
-  categoryIds: string;
+  itemIds: string;
   nameEn: string;
   nameAr: string;
-  isDefault: boolean;
-  isHidden: boolean;
-  categoriesCount: string;
+  menuId: string;
   createdDate: string;
   updatedDate: string;
 }

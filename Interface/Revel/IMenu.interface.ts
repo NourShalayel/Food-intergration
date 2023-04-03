@@ -30,10 +30,10 @@ export interface IMenu {
 
 export interface IOneMenu {
   status: string;
-  data: Categories[]
+  data: ICategories[]
 }
 
-export interface Categories {
+export interface ICategories {
   sort: number;
   parent_name: string;
   name: string;
@@ -42,10 +42,10 @@ export interface Categories {
   image: string;
   id: number;
   description: string;
-  products: Product[]
+  products: IProduct[]
 }
 
-export interface Product {
+export interface IProduct {
   sort: number;
   id_category: number;
   description: string;
@@ -59,10 +59,10 @@ export interface Product {
   sku: number;
   name: string;
   price: number;
-  modifier_classes: ModifierClasses[]
+  modifier_classes: IModifierClasses[]
 }
 
-export interface ModifierClasses {
+export interface IModifierClasses {
   sort: number;
   admin_modifier: boolean;
   activw: boolean;
@@ -70,10 +70,10 @@ export interface ModifierClasses {
   modifier_class_id: number;
   name: string;
   amount_free: number;
-  modifiers: Modifiers[]
+  modifiers: IModifiers[]
 }
 
-export interface Modifiers {
+export interface IModifiers {
   sort: number;
   description: string;
   price: number;
