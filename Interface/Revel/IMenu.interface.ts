@@ -1,5 +1,5 @@
 import { DataType } from "sequelize-typescript";
-import { sequelize } from "../sequlizeConfig";
+import { sequelize } from "../../sequlizeConfig";
 
 export const CustomMenuTable = sequelize.define(
   "CustomMenus",

@@ -1,4 +1,3 @@
-
 import { Header } from "./IHeader.interface";
 
 export interface IRequestInput {
