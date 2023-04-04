@@ -2,7 +2,7 @@ import axios from "axios";
 import { IRequestInput } from "../Interface/IRequest.interface";
 
 export class Revel {
-  public static RevelSendRequest = async (req: IRequestInput): Promise<any> => {
+  public static RevelSendRequest =  async (req: IRequestInput):Promise<any> => {
     const options = {
       method: req.method,
       url: req.url,

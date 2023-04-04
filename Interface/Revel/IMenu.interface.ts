@@ -16,24 +16,23 @@ export const CustomMenuTable = sequelize.define(
 );
 
 
-export interface ICustomMenu {
+export class ICustomMenu {
   id: number;
   LocationId: number;
   MenuName: string;
 }
 
-export interface IMenu {
+export class IMenu {
   LocationId: number;
   MenuName: string;
-  data: IOneMenu[]
+  data: Categories[]
 }
 
-export interface IOneMenu {
-  status: string;
-  data: ICategories[]
+export class OneMenu {
+  categories: Categories[]
 }
 
-export interface ICategories {
+export class Categories {
   sort: number;
   parent_name: string;
   name: string;
@@ -45,7 +44,7 @@ export interface ICategories {
   products: IProduct[]
 }
 
-export interface IProduct {
+export class IProduct {
   sort: number;
   id_category: number;
   description: string;
@@ -62,7 +61,7 @@ export interface IProduct {
   modifier_classes: IModifierClasses[]
 }
 
-export interface IModifierClasses {
+export class IModifierClasses {
   sort: number;
   admin_modifier: boolean;
   activw: boolean;
@@ -73,7 +72,7 @@ export interface IModifierClasses {
   modifiers: IModifiers[]
 }
 
-export interface IModifiers {
+export class IModifiers {
   sort: number;
   description: string;
   price: number;
