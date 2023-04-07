@@ -1,17 +1,16 @@
+import { IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
 import {
   AccountConfigTabel,
   IAccountConfig,
 } from "../Interface/IAccountConfig";
-import {
-  CustomMenuTable,
-  ICustomMenu,
-} from "../Interface/Revel/IMenu.interface";
 import { ICategoryMapping, ICategoryMappingTable } from "../Interface/SettingMapping/ICategoryMapping.interface";
+import { CustomMenuTable, ICustomMenuMapping } from "../Interface/SettingMapping/ICustomMenuMapping.interface";
 import { IItemMapping, IItemMappingTable } from "../Interface/SettingMapping/IItemMapping.interface";
+import { ILocationMapping, LocationMappingTable } from "../Interface/SettingMapping/ILocationMapping.interface";
 import { IMenuMapping, IMenuMappingTable } from "../Interface/SettingMapping/IMenuMapping.interface";
 import { IOptionItemMapping, IOptionItemMappingTable } from "../Interface/SettingMapping/IOptionItemMapping.interface";
 import { IOptionSetMapping, IOptionSetMappingTable } from "../Interface/SettingMapping/IOptionSetMapping.interface";
-
+import { Op } from "sequelize";
 export class DB {
   public static getAccountConfig = async (
     revelAccount: string
@@ -31,12 +30,12 @@ export class DB {
 
   public static getCustomMenu = async (
     schemaName: string
-  ): Promise<ICustomMenu[]> => {
+  ): Promise<ICustomMenuMapping[]> => {
     try {
       const customMenu = CustomMenuTable.schema(schemaName);
       const getAll = await customMenu.findAll();
 
-      const data: ICustomMenu[] = JSON.parse(JSON.stringify(getAll));
+      const data: ICustomMenuMapping[] = JSON.parse(JSON.stringify(getAll));
       return data;
     } catch (error) {
       console.error(error);
@@ -44,7 +43,7 @@ export class DB {
     }
   };
 
-  public static getMenus =  async (
+  public static getMenus = async (
     schemaName: string
   ): Promise<IMenuMapping[]> => {
     try {
@@ -117,4 +116,60 @@ export class DB {
       console.error(error);
       return error;
     }
-  };}
+  };
+
+
+  public static getLocations = async (
+    schemaName: string
+  ): Promise<ILocationMapping[]> => {
+    try {
+      const location = LocationMappingTable.schema(schemaName);
+      const locations = await location.findAll();
+
+      const data: ILocationMapping[] = JSON.parse(JSON.stringify(locations));
+      console.log(data)
+      return data;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+  public static insertMenus = async (
+    schemaName: string,
+    menusData: IMenuFoodbit
+  ): Promise<any> => {
+    try {
+
+      const menuData: IMenuMapping = {
+        foodbitId: menusData.id,
+        nameEn : menusData.name.en ,
+        nameAr : menusData.name.ar ,
+        createdDate : menusData.createdDate ,
+      };
+      const menu = IMenuMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const data: IMenuMapping = JSON.parse(JSON.stringify(menuData));
+      // use sequlize to create
+
+      const menus  = await menu.create({ ...data });
+      menus.save();
+
+      return menus;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+}
+
+
+// const dataReq = req.body
+// const data: Establishments = JSON.parse(JSON.stringify(dataReq, null, 2));
+
+// // pass schemaName
+// const establishment =  (await DB_ORM.establishment(schemaName)).establishment ;
+
+// // use sequlize to create
+// const createEst = await establishment.create({ ...data });
+// createEst.save();

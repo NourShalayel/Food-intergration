@@ -2,11 +2,22 @@ import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { MethodEnum } from "../Common/Enums/Method.enum";
 import { SystemUrl } from "../Common/Enums/SystemEndPoint";
 import { DB } from "../Helper/DB";
-import { Categories, ICustomMenu, IMenu, IModifiers, OneMenu } from "../Interface/Revel/IMenu.interface";
+import { Categories, CustomMenu, Menu, Modifiers, Product } from "../Interface/Revel/IMenu.interface";
 import { IAccountConfig } from "../Interface/IAccountConfig";
 import { Revel } from "../Helper/Revel";
 import { JsonConvert } from "json2typescript";
-import * as Collections from 'typescript-collections';
+import { plainToClass } from "class-transformer";
+import { validate } from "class-validator";
+import { log } from "console";
+import { ICustomMenuMapping } from "../Interface/SettingMapping/ICustomMenuMapping.interface";
+import { IMenuMapping } from "../Interface/SettingMapping/IMenuMapping.interface";
+import { IsNull } from "sequelize-typescript";
+import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.interface";
+import { ILocationMapping } from "../Interface/SettingMapping/ILocationMapping.interface";
+import { Foodbit } from "../Helper/Foodbit";
+import { IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
+import { EntityType } from "../Common/Enums/EntityType";
+const dasd = require('lodash');
 
 const PostMenuFoodBit: AzureFunction = async function (
   context: Context,
@@ -26,54 +37,92 @@ const PostMenuFoodBit: AzureFunction = async function (
 
     //#region DB Connection
     const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
-    const customMenus: ICustomMenu[] = await DB.getCustomMenu(
+    const customMenusMapping: ICustomMenuMapping[] = await DB.getCustomMenu(
       accountConfig.SchemaName
     );
+    const locationsMapping: ILocationMapping[] = await DB.getLocations(
+      accountConfig.SchemaName
+    )
+    console.log(locationsMapping)
     //#endregion
 
     //#region  get data from revel based on customMenu name and establishment
     const baseURL: string = `https://${accountConfig.RevelAccount}.revelup.com/`;
 
-    let allCustomMenu: IMenu[] = [];
-    // const allCustomMenu=new Collections.LinkedList<IMenu>();
+    let menus: Menu[] = [];
     await Promise.all(
-      customMenus.map(async (customMenu) => {
-        console.log(customMenu);
-        const menu = await Revel.RevelSendRequest({
-          url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${customMenu.LocationId}&name=${customMenu.MenuName}`,
-          headers: {
-            contentType: "application/json",
-            token: `${accountConfig.RevelAuth}`,
-          },
-          method: MethodEnum.GET,
-        });
-        const jsonConvert: JsonConvert = new JsonConvert();
-        const categories = new Collections.LinkedList<Categories>();
-        console.log('===menu.data=====')
-        console.log(JSON.stringify(menu))
-        // const data: ICategories[] =  JSON.parse(JSON.stringify(menu.data));
-        console.log('====parse data======')
-        console.log(jsonConvert.deserializeObject(menu))
+      customMenusMapping.map(async (customMenuMapping) => {
+        try {
+          const revelResponse = await Revel.RevelSendRequest({
+            url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${customMenuMapping.LocationId}&name=${customMenuMapping.MenuName}`,
+            headers: {
+              contentType: "application/json",
+              token: `${accountConfig.RevelAuth}`,
+            },
+            method: MethodEnum.GET,
+          });
 
-        const data: OneMenu = jsonConvert.deserializeObject(menu, OneMenu)
-        console.log('====data======')
-        console.log(data);
-        const allMenus: IMenu = {
-          LocationId: customMenu.LocationId,
-          MenuName: customMenu.MenuName,
-          data: data.categories,
-        };
-        allCustomMenu = [...allCustomMenu, allMenus];
+          const customMenu: CustomMenu = plainToClass(CustomMenu, revelResponse.data);
+          // await validate(menuData, {
+          //   whitelist: true,
+          //   forbidNonWhitelisted: true
+          // })
+
+          const foodbitStoreIds: ILocationMapping = await locationsMapping.find(location => {
+            if (location.revelId === customMenuMapping.LocationId) {
+              return location
+            } else return null
+          });
+
+          console.log(foodbitStoreIds)
+          const menu: Menu = {
+            revelLocationId: customMenuMapping.LocationId,
+            foodbitStoreId: foodbitStoreIds.foodbitId || null,
+            menuName: customMenuMapping.MenuName,
+            categories: customMenu.categories,
+          };
+
+          menus = [...menus, menu];
+
+        } catch (error) {
+          console.log(error)
+        }
       })
     )
-
-
-    console.log("zodjfh")
     //#endregion
+
+
+
+    // get all menu from database 
+    const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
+
+    // if menu not exist ==> create menu with data(name , )
+    const allMenus = await menus.map(async menu => {
+      //check if this menu in database 
+      const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
+       if(menu)
+      if (menuMapping === undefined || menuMapping === null || !menuMapping) {
+        const menuData: IMenuFoodbit = {
+          name: {
+            en: menu.menuName,
+            ar: menu.menuName
+          },
+          merchantId: accountConfig.MerchantId,
+          entityType: EntityType.MENU,
+
+        };
+        const resMenus : IMenuFoodbit= await Foodbit.createMenu(accountConfig, menuData)
+        const menusDB = DB.insertMenus(accountConfig.SchemaName, resMenus)
+         
+        return menusDB ;
+      }
+    });
+
+
 
     context.res = {
       status: 200,
-      body: allCustomMenu,
+      // body: menusMapping,
       headers: {
         "Content-Type": "application/json",
       },

@@ -1,5 +1,7 @@
 import axios from "axios";
 import { IRequestInput } from "../Interface/IRequest.interface";
+import { IAccountConfig } from "../Interface/IAccountConfig";
+import { MethodEnum } from "../Common/Enums/Method.enum";
 
 export class Revel {
   public static RevelSendRequest =  async (req: IRequestInput):Promise<any> => {
@@ -20,4 +22,6 @@ export class Revel {
       return error;
     }
   };
+
+
 }
