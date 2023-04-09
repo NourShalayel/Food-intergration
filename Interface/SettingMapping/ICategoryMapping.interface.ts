@@ -18,12 +18,12 @@ export const ICategoryMappingTable = sequelize.define(
 );
 
 export interface ICategoryMapping {
-  revelId: string;
-  foodbitId: string;
-  itemIds: string;
-  nameEn: string;
-  nameAr: string;
-  menuId: string;
-  createdDate: string;
-  updatedDate: string;
+  revelId?: string;
+  foodbitId?: string;
+  itemIds?: string;
+  nameEn?: string;
+  nameAr?: string;
+  menuId?: string;
+  createdDate?: string;
+  updatedDate?: string;
 }

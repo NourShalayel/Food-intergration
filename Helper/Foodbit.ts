@@ -1,6 +1,6 @@
 import axios from "axios";
 import { IRequestInput } from "../Interface/IRequest.interface";
-import { IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
+import { ICategoryFoodbit, IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
 import { MethodEnum } from "../Common/Enums/Method.enum";
 import { IAccountConfig } from "../Interface/IAccountConfig";
 import { Menu } from "../Interface/Revel/IMenu.interface";
@@ -43,6 +43,26 @@ export class Foodbit {
       console.log(menu)
       console.log("post done")
       return menu;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  public static createCategory =  async ( accountConfig : IAccountConfig, categoryData: ICategoryFoodbit) => {
+    try {
+
+      const category = await Foodbit.FoodbitSendRequest({
+        url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/categories`,
+        headers: {
+          contentType: "application/json",
+          token: `${accountConfig.FoodbitToken}`,
+        },
+        method: MethodEnum.POST,
+        data : categoryData
+      });
+      console.log(category)
+      console.log("post done")
+      return category;
     } catch (error) {
       console.error(error);
     }

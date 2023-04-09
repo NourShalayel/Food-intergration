@@ -15,7 +15,7 @@ import { IsNull } from "sequelize-typescript";
 import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.interface";
 import { ILocationMapping } from "../Interface/SettingMapping/ILocationMapping.interface";
 import { Foodbit } from "../Helper/Foodbit";
-import { IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
+import { ICategoryFoodbit, IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
 import { EntityType } from "../Common/Enums/EntityType";
 const dasd = require('lodash');
 
@@ -24,6 +24,7 @@ const PostMenuFoodBit: AzureFunction = async function (
   req: HttpRequest
 ): Promise<void> {
   try {
+
     //#region  get revelAccount from header to get schemaName from database
     const account: string | undefined = req.headers.revelaccount;
     if (!account) {
@@ -91,16 +92,15 @@ const PostMenuFoodBit: AzureFunction = async function (
     )
     //#endregion
 
-
+    //#region create menu if not exsit 
 
     // get all menu from database 
+    console.log("======================================================================================================")
     const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
-
     // if menu not exist ==> create menu with data(name , )
-    const allMenus = await menus.map(async menu => {
+    await Promise.all(menus.map(async (menu) => {
       //check if this menu in database 
       const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
-       if(menu)
       if (menuMapping === undefined || menuMapping === null || !menuMapping) {
         const menuData: IMenuFoodbit = {
           name: {
@@ -111,18 +111,60 @@ const PostMenuFoodBit: AzureFunction = async function (
           entityType: EntityType.MENU,
 
         };
-        const resMenus : IMenuFoodbit= await Foodbit.createMenu(accountConfig, menuData)
+        const resMenus: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuData)
         const menusDB = DB.insertMenus(accountConfig.SchemaName, resMenus)
-         
-        return menusDB ;
+
+        return menusDB;
       }
-    });
+    }));
+
+    //#endregion
 
 
+    //#region create category if not exist 
+    const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.SchemaName)
+    const checkMenusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
+
+    await Promise.all(menus.map(async (menu) => {
+      menu.categories.map(async (category) => {
+        const categoryMapping = categoriesMapping.find((catMapping => catMapping.revelId == category.id.toString()))
+
+        // //get menu id from db 
+        const menuMapping: IMenuMapping  = await checkMenusMapping.find(menuMapping => {
+          if (menuMapping.nameEn == menu.menuName) {
+            return true; // return true to include the menuMapping in the result
+          }
+        });
+
+        const menuId: string = await menuMapping ? menuMapping.foodbitId : ""; // use the foodbitId property if a menuMapping was found, otherwise use an empty string
+
+        console.log(`this is menuId ${menuId}`)
+        if (categoryMapping === undefined || categoryMapping === null || !categoryMapping) {
+          // create
+          const categoryData: ICategoryFoodbit = {
+            name: {
+              en: category.name,
+              ar: category.name,
+            },
+            menus: [{ id: menuId }],
+            entityType: EntityType.MENU_CATEGORY,
+            isHidden: false
+          }
+          const resCategories: ICategoryFoodbit = await Foodbit.createCategory(accountConfig, categoryData)
+          const categoiesDB = DB.insertCategories(accountConfig.SchemaName, resCategories, menuId)
+          return categoiesDB
+        } else {
+          // update 
+        }
+      })
+    }))
+
+
+    //#endregion
 
     context.res = {
       status: 200,
-      // body: menusMapping,
+      body: categoriesMapping,
       headers: {
         "Content-Type": "application/json",
       },
