@@ -23,7 +23,7 @@ export interface IOptionItemMapping {
     nameEn: string;
     nameAr: string;
     price: number;
-    taxable: boolean;
-    createdDate: string;
-    updatedDate: string;
+    taxable?: boolean;
+    createdDate?: string;
+    updatedDate?: string;
 }

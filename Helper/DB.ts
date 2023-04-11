@@ -1,4 +1,4 @@
-import { ICategoryFoodbit, IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
+import { ICategoryFoodbit, IItemFoodbit, IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
 import {
   AccountConfigTabel,
   IAccountConfig,
@@ -11,6 +11,7 @@ import { IMenuMapping, IMenuMappingTable } from "../Interface/SettingMapping/IMe
 import { IOptionItemMapping, IOptionItemMappingTable } from "../Interface/SettingMapping/IOptionItemMapping.interface";
 import { IOptionSetMapping, IOptionSetMappingTable } from "../Interface/SettingMapping/IOptionSetMapping.interface";
 import { Op } from "sequelize";
+import { ISyncErrorMapping, ISyncErrorTable } from "../Interface/SettingMapping/ISyncError.interface";
 export class DB {
   public static getAccountConfig = async (
     revelAccount: string
@@ -107,10 +108,10 @@ export class DB {
     schemaName: string
   ): Promise<IOptionSetMapping[]> => {
     try {
-      const optionItem = IOptionSetMappingTable.schema(schemaName);
-      const allOptionItem = await optionItem.findAll();
+      const option = IOptionSetMappingTable.schema(schemaName);
+      const allOption = await option.findAll();
 
-      const data: IOptionSetMapping[] = JSON.parse(JSON.stringify(allOptionItem));
+      const data: IOptionSetMapping[] = JSON.parse(JSON.stringify(allOption));
       return data;
     } catch (error) {
       console.error(error);
@@ -137,22 +138,17 @@ export class DB {
 
   public static insertMenus = async (
     schemaName: string,
-    menusData: IMenuFoodbit
+    menusData: IMenuMapping
   ): Promise<any> => {
     try {
 
-      const menuData: IMenuMapping = {
-        foodbitId: menusData.id,
-        nameEn : menusData.name.en ,
-        nameAr : menusData.name.ar ,
-        createdDate : menusData.createdDate ,
-      };
+
       const menu = IMenuMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: IMenuMapping = JSON.parse(JSON.stringify(menuData));
+      const data: IMenuMapping = JSON.parse(JSON.stringify(menusData));
       // use sequlize to create
 
-      const menus  = await menu.create({ ...data });
+      const menus = await menu.create({ ...data });
       menus.save();
 
       return menus;
@@ -162,28 +158,19 @@ export class DB {
     }
   };
 
-
   public static insertCategories = async (
     schemaName: string,
-    categoriesData: ICategoryFoodbit ,
-    menuId : string 
+    categoriesData: ICategoryMapping,
   ): Promise<any> => {
     try {
 
-      const categoryData: ICategoryMapping = {
-        revelId: "",
-        foodbitId: categoriesData.id,
-        nameEn: categoriesData.name.en,
-        nameAr: categoriesData.name.ar,
-        menuId: menuId,
-        createdDate: categoriesData.createdDate
-      };
-      const menu = ICategoryMappingTable.schema(schemaName);
+    
+      const category = ICategoryMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: ICategoryMapping = JSON.parse(JSON.stringify(categoryData));
+      const data: ICategoryMapping = JSON.parse(JSON.stringify(categoriesData));
       // use sequlize to create
 
-      const categories  = await menu.create({ ...data });
+      const categories = await category.create({ ...data });
       categories.save();
 
       return categories;
@@ -192,15 +179,87 @@ export class DB {
       return error;
     }
   };
+ 
+  public static insertItems = async (
+    schemaName: string,
+    itemsData: IItemMapping,
+  ): Promise<any> => {
+    try {
+
+    
+      const item = IItemMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const data: ICategoryMapping = JSON.parse(JSON.stringify(itemsData));
+      // use sequlize to create
+
+      const items = await item.create({ ...data });
+      items.save();
+
+      return items;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+  public static insertOptionSet = async (
+    schemaName: string,
+    optionData: IOptionSetMapping,
+  ): Promise<any> => {
+    try {
+      const option = IItemMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const data: ICategoryMapping = JSON.parse(JSON.stringify(optionData));
+      // use sequlize to create
+
+      const options = await option.create({ ...data });
+      options.save();
+
+      return options;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+   public static insertOptionItem = async (
+    schemaName: string,
+    optionData: IOptionItemMapping,
+  ): Promise<any> => {
+    try {
+      const option = IItemMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const data: ICategoryMapping = JSON.parse(JSON.stringify(optionData));
+      // use sequlize to create
+
+      const options = await option.create({ ...data });
+      options.save();
+
+      return options;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+  public static insertSyncError = async (
+    schemaName: string,
+    errorDetails: ISyncErrorMapping,
+  ): Promise<any> => {
+    try {
+      const error = ISyncErrorTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const data: ICategoryMapping = JSON.parse(JSON.stringify(errorDetails));
+      // use sequlize to create
+
+      const errors = await error.create({ ...data });
+      errors.save();
+
+      return errors;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
 }
 
-
-// const dataReq = req.body
-// const data: Establishments = JSON.parse(JSON.stringify(dataReq, null, 2));
-
-// // pass schemaName
-// const establishment =  (await DB_ORM.establishment(schemaName)).establishment ;
-
-// // use sequlize to create
-// const createEst = await establishment.create({ ...data });
-// createEst.save();

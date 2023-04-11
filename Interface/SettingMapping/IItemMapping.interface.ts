@@ -5,12 +5,13 @@ import { DataType } from "sequelize-typescript";
 export const IItemMappingTable = sequelize.define(
     "Items",
     {
-        revelId: { type: DataType.STRING, primaryKey: true },
-        foodbitId: DataType.STRING,
+        revelId: DataType.STRING,
+        foodbitId:{ type: DataType.STRING, primaryKey: true },
         nameEn: DataType.STRING,
         nameAr: DataType.STRING,
         categoryId: DataType.STRING,
         price: DataType.DECIMAL,
+        barcode : DataType.STRING,
         optionIds: DataType.STRING,
         optionSetIds: DataType.STRING,
         createdDate: DataType.STRING,
@@ -26,8 +27,9 @@ export interface IItemMapping {
     nameAr: string;
     categoryId: string;
     price: number;
-    optionIds: string;
-    optionSetIds: string;
-    createdDate: string;
-    updatedDate: string;
+    barcode:string;
+    optionIds?: string;
+    optionSetIds?: string;
+    createdDate?: string;
+    updatedDate?: string;
 }

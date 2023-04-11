@@ -21,10 +21,11 @@ export class Categories {
   image?: string;
   id?: number;
   description?: string;
-  products?: Product[]
+  products?: Item[]
+  price?: number
 }
 
-export class Product {
+export class Item {
   sort?: number;
   id_category?: number;
   description?: string;
@@ -38,18 +39,20 @@ export class Product {
   sku?: number;
   name?: string;
   price?: number;
-  modifier_classes?: ModifierClasses[]
+  modifier_classes?: ModifierClasses[];
 }
 
 export class ModifierClasses {
   sort?: number;
   admin_modifier?: boolean;
-  activw?: boolean;
+  active?: boolean;
   id?: number;
   modifier_class_id?: number;
   name?: string;
   amount_free?: number;
   modifiers?: Modifiers[]
+  maximum_amount?: number
+  minimum_amount?: number
 }
 
 export class Modifiers {

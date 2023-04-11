@@ -12,19 +12,11 @@ export interface IMenuFoodbit {
     position?: number
     categories?: ICategoryFoodbit[]
 }
-
-interface names {
-    en: string,
-    ar: string
-}
-
 interface availability {
     isHidden: boolean;
     isAvailableNow: boolean;
     isUnAvailable: boolean;
 }
-
-
 export interface ICategoryFoodbit {
     id?: string;
     createdDate?: string;
@@ -37,11 +29,73 @@ export interface ICategoryFoodbit {
     entityType?: EntityType;
     isHidden?: boolean
 }
+export interface IItemFoodbit {
+    id?: string
+    availability?: availability
+    merchantId?: string
+    profilePic?: string
+    calories?: string
+    name?: names
+    description?: descriptions
+    total?: number
+    price?: number
+    entityType?: EntityType.MENU_ITEM
+    isHidden?: boolean
+    createdDate?: string;
+    lastUpdated?: string;
+}
 
-// if i need to add categories in many menu 
+export interface IOptionSetFoodbit {
+    id?: string
+    merchantId?: string
+    name?: names
+    availability?: availability
+    menuItems: menuItems[]
+    maximumNumberOfSelections?: number
+    minimumNumberOfSelections?: number
+    enableMinimumSelections?: boolean
+    enableMaximumSelections?: boolean
+    createdDate?: string;
+    lastUpdated?: string;
+    isHidden?: boolean
+    entityType?: EntityType
+}
+
+export interface IOptionItemFoodbit {
+    id?: string
+    name?: names
+    price?: number
+    entityType?: EntityType
+    availability?: availability
+    notTaxable?: boolean
+    merchantId?: string
+    optionSets?: optionSets[]
+    isHidden?: boolean
+    createdDate?: string;
+    lastUpdated?: string;
+    taxable?:boolean
+}
+
+interface names {
+    en: string,
+    ar: string
+}
+interface descriptions {
+    en: string,
+    ar: string
+}
+
+// if i need to add categories in many menu o
 interface menus {
     id: string;
 }
+interface menuItems {
+    id: string;
+}
+interface optionSets {
+    id?: string
+}
+
 // {
 //     "availability": {
 //       "isHid ;den": false,

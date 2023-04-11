@@ -22,8 +22,8 @@ export interface IOptionSetMapping {
     foodbitId: string;
     nameEn: string;
     nameAr: string;
-    itemIds: string;
-    menuIds: string;
-    createdDate: string;
-    updatedDate: string;
+    itemIds?: string;
+    menuIds?: string;
+    createdDate?: string;
+    updatedDate?: string;
 }

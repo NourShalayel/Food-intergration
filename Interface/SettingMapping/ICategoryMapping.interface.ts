@@ -6,7 +6,7 @@ export const ICategoryMappingTable = sequelize.define(
   "Categories",
   {
     revelId: { type: DataType.STRING, primaryKey: true },
-    foodbitId: DataType.STRING,
+    foodbitId:{ type: DataType.STRING, primaryKey: true },
     itemIds: DataType.STRING,
     nameEn: DataType.STRING,
     nameAr: DataType.STRING,
