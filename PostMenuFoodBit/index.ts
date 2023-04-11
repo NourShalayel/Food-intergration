@@ -337,132 +337,186 @@ const PostMenuFoodBit: AzureFunction = async function (
 
 
 
-    /*
- //#region create optionSet if not exist or update 
- console.log("======================================================================================================")
- console.log("===========================I'm in flow optionSet/modifier class============================")
+    //#region create optionSet if not exist or update 
+    console.log("======================================================================================================")
+    console.log("===========================I'm in flow optionSet/modifier class============================")
 
- const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.SchemaName)
- await Promise.all(
-   menus.map(async (menu) => {
-     menu.categories.map((category) => {
-       category.products.map((item) => {
-         item.modifier_classes.map(async (mod_class) => {
-           const optionSetMapping: IOptionSetMapping = optionSetsMapping.find(optionSet => optionSet.revelId == mod_class.id.toString())
+    const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.SchemaName)
+    await Promise.all(
+      menus.map(async (menu) => {
+        menu.categories.map((category) => {
+          category.products.map((item) => {
+            item.modifier_classes.map(async (mod_class) => {
 
-           const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.SchemaName)
-           // //get menu id from db 
-           const itemMapping: IItemMapping = await itemsMapping.find(itemMap => {
-             if (itemMap.revelId == item.id.toString()) {
-               return true; // return true to include the itemMapping in the result
-             }
-           });
+              try {
+                const optionSetMapping: IOptionSetMapping = optionSetsMapping.find(optionSet => optionSet.revelId == mod_class.id.toString())
 
-           const itemId: string = await itemMapping ? itemMapping.foodbitId : ""; // use the foodbitId property if a itemMapping was found, otherwise use an empty string
+                const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.SchemaName)
+                // //get menu id from db 
+                const itemMapping: IItemMapping = await itemsMapping.find(itemMap => {
+                  if (itemMap.revelId == item.id.toString()) {
+                    return true; // return true to include the itemMapping in the result
+                  }
+                });
+
+                const itemId: string = await itemMapping ? itemMapping.foodbitId : ""; // use the foodbitId property if a itemMapping was found, otherwise use an empty string
+
+                if (optionSetMapping == undefined || optionSetMapping == null) {
+                  //create
+                  const optionSetFoodbit: IOptionSetFoodbit = {
+                    name: {
+                      en: mod_class.name,
+                      ar: mod_class.name,
+                    },
+                    merchantId: accountConfig.MerchantId,
+                    menuItems: [{ id: itemId }],
+                    maximumNumberOfSelections: mod_class.maximum_amount,
+                    minimumNumberOfSelections: mod_class.minimum_amount,
+                    enableMinimumSelections: mod_class.active,
+                    enableMaximumSelections: mod_class.active,
+                    isHidden: mod_class.active,
+                    entityType: EntityType.MENU_OPTIONS
+                  }
+                  const foodbitOptionResponse: IOptionSetFoodbit = await Foodbit.createOptionSet(accountConfig, optionSetFoodbit)
+
+                  const optionSetData: IOptionSetMapping = {
+                    revelId: mod_class.id.toString(),
+                    foodbitId: foodbitOptionResponse.id,
+                    nameEn: foodbitOptionResponse.name.en || "",
+                    nameAr: foodbitOptionResponse.name.ar || "",
+                    createdDate: foodbitOptionResponse.createdDate,
+                  };
+                  DB.insertOptionSet(accountConfig.SchemaName, optionSetData)
+                } else {
+                  //update
+
+                  console.log("I'm in update optionSet")
+                  const optionSetFoodbit: IOptionSetFoodbit = {
+                    name: {
+                      en: mod_class.name,
+                      ar: mod_class.name,
+                    },
+                    merchantId: accountConfig.MerchantId,
+                    menuItems: [{ id: itemId }],
+                    maximumNumberOfSelections: mod_class.maximum_amount,
+                    minimumNumberOfSelections: mod_class.minimum_amount,
+                    enableMinimumSelections: mod_class.active,
+                    enableMaximumSelections: mod_class.active,
+                    isHidden: mod_class.active,
+                    entityType: EntityType.MENU_OPTIONS
+                  }
+
+                  await Foodbit.updateOptionSet(accountConfig, optionSetFoodbit, optionSetMapping.foodbitId)
+                }
+              } catch (error) {
+                console.log(`Error in Flow OptionSet ${error}`)
+
+                const errorDetails: ISyncErrorMapping = {
+                  revelId: mod_class.id.toString(),
+                  message: error.message,
+                  syncDate: Date().toString(),
+                  type: EntityType.MENU_OPTIONS
+                }
+                await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+              }
 
 
+            })
+          })
+        })
+      }))
+    //#endregion 
 
-           if (optionSetMapping == undefined || optionSetMapping == null) {
-             //create
-             const optionSetFoodbit: IOptionSetFoodbit = {
-               name: {
-                 en: mod_class.name,
-                 ar: mod_class.name,
-               },
-               merchantId: accountConfig.MerchantId,
-               menuItems: [{ id: itemId }],
-               maximumNumberOfSelections: mod_class.maximum_amount,
-               minimumNumberOfSelections: mod_class.minimum_amount,
-               enableMinimumSelections: mod_class.active,
-               enableMaximumSelections: mod_class.active,
-               isHidden: mod_class.active,
-               entityType: EntityType.MENU_OPTIONS
-             }
-             const foodbitOptionResponse: IOptionSetFoodbit = await Foodbit.createOptionSet(accountConfig, optionSetFoodbit)
 
-             const optionSetData: IOptionSetMapping = {
-               revelId: mod_class.id.toString(),
-               foodbitId: foodbitOptionResponse.id,
-               nameEn: foodbitOptionResponse.name.en || "",
-               nameAr: foodbitOptionResponse.name.ar || "",
-               createdDate: foodbitOptionResponse.createdDate,
-             };
-             const optionsDB = DB.insertOptionSet(accountConfig.SchemaName, optionSetData)
-             return optionsDB
+    //#region create optionItem if not exist or update 
+    console.log("======================================================================================================")
+    console.log("===========================I'm in flow optionItem/modifier ============================")
 
-           } else {
-             //update
-           }
+    const optionItemsMapping: IOptionItemMapping[] = await DB.getOptionItem(accountConfig.SchemaName)
+    await Promise.all(
+      menus.map(async (menu) => {
+        menu.categories.map((category) => {
+          category.products.map((item) => {
+            item.modifier_classes.map(async (mod_class) => {
+              mod_class.modifiers.map(async (modifier) => {
 
-         })
-       })
-     })
-   }))
- //#endregion 
+                try {
+                  const optionItemMapping: IOptionItemMapping = optionItemsMapping.find(optionItem => optionItem.revelId == modifier.id.toString())
 
- //#region create optionItem if not exist or update 
- console.log("======================================================================================================")
- console.log("===========================I'm in flow optionItem/modifier ============================")
+                  // get optionSet is to pass this id in option item 
+                  const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.SchemaName)
 
- const optionItemsMapping: IOptionItemMapping[] = await DB.getOptionItem(accountConfig.SchemaName)
- await Promise.all(
-   menus.map(async (menu) => {
-     menu.categories.map((category) => {
-       category.products.map((item) => {
-         item.modifier_classes.map(async (mod_class) => {
-           mod_class.modifiers.map(async (modifier) => {
-             const optionItemMapping: IOptionItemMapping = optionItemsMapping.find(optionItem => optionItem.revelId == modifier.id.toString())
+                  // //get menu id from db 
+                  const optionMapping: IOptionSetMapping = await optionSetsMapping.find(option => {
+                    if (option.revelId == modifier.id.toString()) {
+                      return true; // return true to include the optionMapping in the result
+                    }
+                  });
 
-             // get optionSet is to pass this id in option item 
-             const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.SchemaName)
+                  const optionSetId: string = await optionMapping ? optionMapping.foodbitId : ""; // use the foodbitId property if a optionMapping was found, otherwise use an empty string
 
-             // //get menu id from db 
-             const optionMapping: IOptionSetMapping = await optionSetsMapping.find(option => {
-               if (option.revelId == modifier.id.toString()) {
-                 return true; // return true to include the optionMapping in the result
-               }
-             });
+                  // check if optionItemMapping empty=>create or not=>update 
+                  if (optionItemMapping == undefined || optionItemMapping == null) {
+                    //create 
+                    const optionItemFoodbit: IOptionItemFoodbit = {
+                      name: {
+                        en: modifier.name,
+                        ar: modifier.name,
+                      },
+                      merchantId: accountConfig.MerchantId,
+                      isHidden: modifier.active,
+                      entityType: EntityType.MENU_OPTION_ITEM,
+                      price: modifier.price,
+                      optionSets: [{ id: optionSetId }],
+                    }
+                    const foodbitOptionItemResponse: IOptionItemFoodbit = await Foodbit.craeteOptionItem(accountConfig, optionItemFoodbit)
 
-             const optionSetId: string = await optionMapping ? optionMapping.foodbitId : ""; // use the foodbitId property if a optionMapping was found, otherwise use an empty string
+                    const optionItemData: IOptionItemMapping = {
+                      revelId: modifier.id.toString(),
+                      foodbitId: foodbitOptionItemResponse.id,
+                      nameEn: foodbitOptionItemResponse.name.en || "",
+                      nameAr: foodbitOptionItemResponse.name.ar || "",
+                      createdDate: foodbitOptionItemResponse.createdDate,
+                      price: foodbitOptionItemResponse.price,
+                    };
+                    DB.insertOptionItem(accountConfig.SchemaName, optionItemData)
 
-             // check if optionItemMapping empty=>create or not=>update 
-             if (optionItemMapping == undefined || optionItemMapping == null) {
-               //create 
-               const optionItemFoodbit: IOptionItemFoodbit = {
-                 name: {
-                   en: modifier.name,
-                   ar: modifier.name,
-                 },
-                 merchantId: accountConfig.MerchantId,
-                 isHidden: modifier.active,
-                 entityType: EntityType.MENU_OPTION_ITEM,
-                 price: modifier.price,
-                 optionSets: [{ id: optionSetId }],
-               }
-               const foodbitOptionItemResponse: IOptionItemFoodbit = await Foodbit.craeteOptionItem(accountConfig, optionItemFoodbit)
+                  } else {
+                    //update
+                    console.log("I'm in update optionItem")
+                    const optionItemFoodbit: IOptionItemFoodbit = {
+                      name: {
+                        en: modifier.name,
+                        ar: modifier.name,
+                      },
+                      merchantId: accountConfig.MerchantId,
+                      isHidden: modifier.active,
+                      price: modifier.price,
+                      optionSets: [{ id: optionSetId }],
+                    }
+                    await Foodbit.updateOptionItem(accountConfig, optionItemFoodbit, optionItemMapping.foodbitId)
+                  }
 
-               const optionItemData: IOptionItemMapping = {
-                 revelId: modifier.id.toString(),
-                 foodbitId: foodbitOptionItemResponse.id,
-                 nameEn: foodbitOptionItemResponse.name.en || "",
-                 nameAr: foodbitOptionItemResponse.name.ar || "",
-                 createdDate: foodbitOptionItemResponse.createdDate,
-                 price: foodbitOptionItemResponse.price,
-               };
-               const optionDB = DB.insertOptionItem(accountConfig.SchemaName, optionItemData)
-               return optionDB
+                } catch (error) {
+                  console.log(`Error in Flow OptionItem ${error}`)
 
-             } else {
-               //update
-             }
+                  const errorDetails: ISyncErrorMapping = {
+                    revelId: modifier.id.toString(),
+                    message: error.message,
+                    syncDate: Date().toString(),
+                    type: EntityType.MENU_OPTION_ITEM
+                  }
+                  await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+                }
 
-           })
-         })
-       })
-     })
-   }))
- //#endregion 
-*/
+              })
+            })
+          })
+        })
+      }))
+    //#endregion 
+
+
     context.res = {
       status: 200,
       body: menus,

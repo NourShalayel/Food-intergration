@@ -5,8 +5,8 @@ import { DataType } from "sequelize-typescript";
 export const IOptionSetMappingTable = sequelize.define(
     "OptionSets",
     {
-        revelId: { type: DataType.STRING, primaryKey: true },
-        foodbitId: DataType.STRING,
+        revelId: DataType.STRING,
+        foodbitId: { type: DataType.STRING, primaryKey: true },
         nameEn: DataType.STRING,
         nameAr: DataType.STRING,
         itemIds: DataType.STRING,

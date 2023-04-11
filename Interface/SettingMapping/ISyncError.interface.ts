@@ -4,7 +4,7 @@ import { EntityType } from "../../Common/Enums/EntityType";
 
 
 export const ISyncErrorTable = sequelize.define(
-    "SyncError",
+    "SyncErrors",
     {
         revelId: { type: DataType.STRING, primaryKey: true },
         message: { type: DataType.STRING, primaryKey: true },

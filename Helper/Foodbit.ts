@@ -165,7 +165,48 @@ export class Foodbit {
       console.log("update done")
       return item;
     } catch (error) {
-      // console.error(error);
+      console.error(error);
     }
   };
+
+  public static updateOptionSet =  async ( accountConfig : IAccountConfig, optionData: IOptionSetFoodbit , id : string) => {
+    try {
+
+      console.log(`this is id to update optionSet ${id}`)
+      const option = await Foodbit.FoodbitSendRequest({
+        url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/option-sets/${id}`,
+        headers: {
+          contentType: "application/json",
+          token: `${accountConfig.FoodbitToken}`,
+        },
+        method: MethodEnum.PATCH,
+        data : optionData
+      });
+      console.log("update done")
+      return option;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  public static updateOptionItem =  async ( accountConfig : IAccountConfig, optionItem: IOptionItemFoodbit , id : string) => {
+    try {
+
+      console.log(`this is id to update optionItem ${id}`)
+      const option = await Foodbit.FoodbitSendRequest({
+        url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/option-items/${id}`,
+        headers: {
+          contentType: "application/json",
+          token: `${accountConfig.FoodbitToken}`,
+        },
+        method: MethodEnum.PATCH,
+        data : optionItem
+      });
+      console.log("update done")
+      return option;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
 }

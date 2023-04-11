@@ -207,9 +207,9 @@ export class DB {
     optionData: IOptionSetMapping,
   ): Promise<any> => {
     try {
-      const option = IItemMappingTable.schema(schemaName);
+      const option = IOptionSetMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: ICategoryMapping = JSON.parse(JSON.stringify(optionData));
+      const data: IOptionSetMapping = JSON.parse(JSON.stringify(optionData));
       // use sequlize to create
 
       const options = await option.create({ ...data });
@@ -227,9 +227,9 @@ export class DB {
     optionData: IOptionItemMapping,
   ): Promise<any> => {
     try {
-      const option = IItemMappingTable.schema(schemaName);
+      const option = IOptionItemMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: ICategoryMapping = JSON.parse(JSON.stringify(optionData));
+      const data: IOptionItemMapping = JSON.parse(JSON.stringify(optionData));
       // use sequlize to create
 
       const options = await option.create({ ...data });
