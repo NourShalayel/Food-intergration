@@ -67,6 +67,7 @@ export class DB {
       const allCategories = await category.findAll();
 
       const data: ICategoryMapping[] = JSON.parse(JSON.stringify(allCategories));
+
       return data;
     } catch (error) {
       console.error(error);
@@ -128,7 +129,6 @@ export class DB {
       const locations = await location.findAll();
 
       const data: ILocationMapping[] = JSON.parse(JSON.stringify(locations));
-      console.log(data)
       return data;
     } catch (error) {
       console.error(error);
@@ -164,7 +164,7 @@ export class DB {
   ): Promise<any> => {
     try {
 
-    
+
       const category = ICategoryMappingTable.schema(schemaName);
       //get data after posting and insert in database 
       const data: ICategoryMapping = JSON.parse(JSON.stringify(categoriesData));
@@ -179,14 +179,14 @@ export class DB {
       return error;
     }
   };
- 
+
   public static insertItems = async (
     schemaName: string,
     itemsData: IItemMapping,
   ): Promise<any> => {
     try {
 
-    
+
       const item = IItemMappingTable.schema(schemaName);
       //get data after posting and insert in database 
       const data: ICategoryMapping = JSON.parse(JSON.stringify(itemsData));
@@ -222,7 +222,7 @@ export class DB {
     }
   };
 
-   public static insertOptionItem = async (
+  public static insertOptionItem = async (
     schemaName: string,
     optionData: IOptionItemMapping,
   ): Promise<any> => {
@@ -234,6 +234,108 @@ export class DB {
 
       const options = await option.create({ ...data });
       options.save();
+
+      return options;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+  public static updateCategories = async (
+    schemaName: string,
+    categoriesData: ICategoryMapping,
+    foodbitId: string
+  ): Promise<any> => {
+    try {
+
+      const category = ICategoryMappingTable.schema(schemaName);
+      //get data after post update and update in database 
+      const categoryUpdates: ICategoryMapping = JSON.parse(JSON.stringify(categoriesData));
+      // use sequlize to create
+
+      const categories = await category.update(
+        { ...categoryUpdates },
+        {
+          where: { foodbitId: foodbitId }
+        });
+
+      return categories;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+  public static updateItems = async (
+    schemaName: string,
+    itemsData: IItemMapping,
+    foodbitId: string
+  ): Promise<any> => {
+    try {
+
+
+      const item = IItemMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const itemUpdates: ICategoryMapping = JSON.parse(JSON.stringify(itemsData));
+      // use sequlize to create
+
+      const items = await item.update(
+        { ...itemUpdates },
+        {
+          where: { foodbitId: foodbitId }
+        });
+
+      return items;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+  public static updateOptionSet = async (
+    schemaName: string,
+    optionData: IOptionSetMapping,
+    foodbitId: string
+
+  ): Promise<any> => {
+    try {
+      const option = IOptionSetMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const optionUpdates: IOptionSetMapping = JSON.parse(JSON.stringify(optionData));
+      // use sequlize to create
+
+      const options = await option.update(
+        { ...optionUpdates },
+        {
+          where: { foodbitId: foodbitId }
+        });
+
+
+      return options;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+  public static updateOptionItem = async (
+    schemaName: string,
+    optionData: IOptionItemMapping,
+    foodbitId: string
+
+  ): Promise<any> => {
+    try {
+      const option = IOptionItemMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const optionUpdates: IOptionItemMapping = JSON.parse(JSON.stringify(optionData));
+      // use sequlize to create
+
+      const options = await option.update(
+        { ...optionUpdates },
+        {
+          where: { foodbitId: foodbitId }
+        });
+
 
       return options;
     } catch (error) {

@@ -6,8 +6,9 @@ import { EntityType } from "../../Common/Enums/EntityType";
 export const ISyncErrorTable = sequelize.define(
     "SyncErrors",
     {
-        revelId: { type: DataType.STRING, primaryKey: true },
-        message: { type: DataType.STRING, primaryKey: true },
+        id : { type: DataType.STRING, primaryKey: true , autoIncrement : true},
+        revelId:  DataType.STRING,
+        message:  DataType.STRING,
         syncDate: DataType.STRING,
         type:  DataType.STRING,
 
@@ -16,6 +17,7 @@ export const ISyncErrorTable = sequelize.define(
 );
 
 export interface ISyncErrorMapping {
+    id? : number
     revelId: string;
     message: string
     syncDate: string

@@ -21,13 +21,13 @@ export const IItemMappingTable = sequelize.define(
 );
 
 export interface IItemMapping {
-    revelId: string;
-    foodbitId: string;
-    nameEn: string;
-    nameAr: string;
-    categoryId: string;
-    price: number;
-    barcode:string;
+    revelId?: string;
+    foodbitId?: string;
+    nameEn?: string;
+    nameAr?: string;
+    categoryId?: string;
+    price?: number;
+    barcode?:string;
     optionIds?: string;
     optionSetIds?: string;
     createdDate?: string;

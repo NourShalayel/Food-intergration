@@ -18,10 +18,10 @@ export const IOptionSetMappingTable = sequelize.define(
 );
 
 export interface IOptionSetMapping {
-    revelId: string;
-    foodbitId: string;
-    nameEn: string;
-    nameAr: string;
+    revelId?: string;
+    foodbitId?: string;
+    nameEn?: string;
+    nameAr?: string;
     itemIds?: string;
     menuIds?: string;
     createdDate?: string;

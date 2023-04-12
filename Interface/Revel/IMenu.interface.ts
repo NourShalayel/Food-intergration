@@ -68,3 +68,9 @@ export class Modifiers {
   sku?: string;
   name?: string;
 }
+
+
+export class splitNameLanguag {
+  en: string;
+  ar: string;
+}

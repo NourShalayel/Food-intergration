@@ -18,10 +18,10 @@ export const IOptionItemMappingTable = sequelize.define(
 );
 
 export interface IOptionItemMapping {
-    revelId: string;
-    foodbitId: string;
-    nameEn: string;
-    nameAr: string;
+    revelId?: string;
+    foodbitId?: string;
+    nameEn?: string;
+    nameAr?: string;
     price: number;
     taxable?: boolean;
     createdDate?: string;

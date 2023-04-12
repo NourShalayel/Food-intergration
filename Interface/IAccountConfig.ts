@@ -9,6 +9,7 @@ export const AccountConfigTabel = sequelize.define(
     RevelAuth: DataType.STRING,
     FoodbitToken: DataType.STRING,
     MerchantId: DataType.STRING,
+    MenuStatus: DataType.STRING,
   },
   { createdAt: false, updatedAt: false }
 );
@@ -19,4 +20,5 @@ export interface IAccountConfig {
   RevelAuth: string;
   FoodbitToken: string;
   MerchantId: string;
+  MenuStatus: string ;
 }

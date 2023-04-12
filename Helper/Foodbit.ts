@@ -40,8 +40,6 @@ export class Foodbit {
         method: MethodEnum.POST,
         data : menuData
       });
-      console.log(menu)
-      console.log("post done")
       return menu;
     } catch (error) {
       console.error(error);
@@ -60,8 +58,6 @@ export class Foodbit {
         method: MethodEnum.POST,
         data : categoryData
       });
-      console.log(category)
-      console.log("post done")
       return category;
     } catch (error) {
       console.error(error);
@@ -80,8 +76,6 @@ export class Foodbit {
         method: MethodEnum.POST,
         data : itemData
       });
-      console.log(item)
-      console.log("post done")
       return item;
     } catch (error) {
       console.error(error);
@@ -100,8 +94,6 @@ export class Foodbit {
         method: MethodEnum.POST,
         data : optionData
       });
-      console.log(option)
-      console.log("post done")
       return option;
     } catch (error) {
       console.error(error);
@@ -121,8 +113,6 @@ export class Foodbit {
         method: MethodEnum.POST,
         data : optionItemData
       });
-      console.log(optionItem)
-      console.log("post done")
       return optionItem;
     } catch (error) {
       console.error(error);
@@ -131,8 +121,6 @@ export class Foodbit {
 
   public static updateCategory =  async ( accountConfig : IAccountConfig, categoryData: ICategoryFoodbit , id : string) => {
     try {
-
-      console.log(`this is id to update category ${id}`)
       const category = await Foodbit.FoodbitSendRequest({
         url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/categories/${id}`,
         headers: {
@@ -142,17 +130,14 @@ export class Foodbit {
         method: MethodEnum.PATCH,
         data : categoryData
       });
-      console.log("update done")
       return category;
     } catch (error) {
-      // console.error(error);
+      console.error(error);
     }
   };
 
   public static updateItem =  async ( accountConfig : IAccountConfig, itemData: IItemFoodbit , id : string) => {
     try {
-
-      console.log(`this is id to update item ${id}`)
       const item = await Foodbit.FoodbitSendRequest({
         url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/items/${id}`,
         headers: {
@@ -162,7 +147,6 @@ export class Foodbit {
         method: MethodEnum.PATCH,
         data : itemData
       });
-      console.log("update done")
       return item;
     } catch (error) {
       console.error(error);
@@ -171,8 +155,6 @@ export class Foodbit {
 
   public static updateOptionSet =  async ( accountConfig : IAccountConfig, optionData: IOptionSetFoodbit , id : string) => {
     try {
-
-      console.log(`this is id to update optionSet ${id}`)
       const option = await Foodbit.FoodbitSendRequest({
         url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/option-sets/${id}`,
         headers: {
@@ -182,7 +164,6 @@ export class Foodbit {
         method: MethodEnum.PATCH,
         data : optionData
       });
-      console.log("update done")
       return option;
     } catch (error) {
       console.error(error);
@@ -191,8 +172,6 @@ export class Foodbit {
 
   public static updateOptionItem =  async ( accountConfig : IAccountConfig, optionItem: IOptionItemFoodbit , id : string) => {
     try {
-
-      console.log(`this is id to update optionItem ${id}`)
       const option = await Foodbit.FoodbitSendRequest({
         url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/option-items/${id}`,
         headers: {
@@ -202,7 +181,6 @@ export class Foodbit {
         method: MethodEnum.PATCH,
         data : optionItem
       });
-      console.log("update done")
       return option;
     } catch (error) {
       console.error(error);
