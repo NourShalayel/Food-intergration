@@ -97,7 +97,65 @@ const PostMenuFoodBit: AzureFunction = async function (
       )
       //#endregion 
 
+      //#region create menu if not exsit or update 
 
+      // get all menu from database 
+      console.log("======================================================================================================")
+      console.log("===========================I'm in flow menu ============================")
+
+      const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
+      // if menu not exist ==> create menu with data(name , )
+
+      await Promise.all(locationsMapping.map((location) => {
+
+        menus.map(async (menu) => {
+          //check if this menu in database 
+          try {
+            const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
+            // get name from revel and spilt by use function to ar / en 
+            const name: splitNameLanguag[] = Utils.splitNameByLanguage(menu.menuName)
+            if (menuMapping === undefined || menuMapping === null || !menuMapping) {
+              const menuFoodbit: IMenuFoodbit = {
+                name: {
+                  en: name[0].en,
+                  ar: name[0].ar,
+                },
+                stores: [{ id: location.foodbitId }],
+                merchantId: accountConfig.MerchantId,
+                entityType: EntityType.MENU,
+                isHidden: false
+              };
+              const foodbitMenuResponse: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuFoodbit)
+              //insert in db
+              const menuData: IMenuMapping = {
+                foodbitId: foodbitMenuResponse.id,
+                nameEn: foodbitMenuResponse.name.en || "",
+                nameAr: foodbitMenuResponse.name.ar || "",
+                createdDate: foodbitMenuResponse.createdDate,
+                foodbitStoreId: menu.foodbitStoreId,
+              };
+              const menusDB = DB.insertMenus(accountConfig.SchemaName, menuData)
+  
+              return menusDB;
+            }
+          } catch (error) {
+            console.log(`Error in Flow Menu ${error}`)
+  
+            var date = Date.now()
+  
+            const errorDetails: ISyncErrorMapping = {
+              revelId: menu.menuName,
+              message: error.message,
+              syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
+              type: EntityType.MENU
+            }
+            await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+          }
+        })
+      }))
+
+
+      //#endregion
 
     } else if (accountConfig.MenuStatus == "many") {
 
@@ -197,410 +255,412 @@ const PostMenuFoodBit: AzureFunction = async function (
         }
       }));
       //#endregion
+    }
 
-      //#region create category if not exist or update 
-      console.log("======================================================================================================")
-      console.log("===========================I'm in flow category============================")
-      await Promise.all(menus.map(async (menu) => {
-        menu.categories.map(async (category) => {
-          const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.SchemaName)
-          try {
-            const checkMenusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
 
-            const categoryMapping = categoriesMapping.find((catMapping => catMapping.revelId == category.id.toString()))
-            // //get menu id from db 
-            const menuMapping: IMenuMapping = await checkMenusMapping.find(menuMapping => {
-              if (menuMapping.nameEn == menu.menuName) {
-                return true; // return true to include the menuMapping in the result
-              }
-            });
+    //#region create category if not exist or update 
+    console.log("======================================================================================================")
+    console.log("===========================I'm in flow category============================")
+    await Promise.all(menus.map(async (menu) => {
+      menu.categories.map(async (category) => {
+        const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.SchemaName)
+        try {
+          const checkMenusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
 
-            const menuId: string = await menuMapping ? menuMapping.foodbitId : ""; // use the foodbitId property if a menuMapping was found, otherwise use an empty string
-
-            // get name from revel and spilt by use function to ar / en 
-            const name: splitNameLanguag[] = Utils.splitNameByLanguage(category.name)
-
-            if (categoryMapping === undefined || categoryMapping === null) {
-              // create
-
-              const categoryFodbit: ICategoryFoodbit = {
-                name: {
-                  en: name[0].en,
-                  ar: name[0].ar,
-                },
-                menus: [{ id: menuId }],
-                entityType: EntityType.MENU_CATEGORY,
-                isHidden: false,
-                merchantId: accountConfig.MerchantId
-              }
-              const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.createCategory(accountConfig, categoryFodbit)
-
-              const categoryData: ICategoryMapping = {
-                revelId: category.id.toString(),
-                foodbitId: foodbitCategoryResponse.id,
-                nameEn: foodbitCategoryResponse.name.en || "",
-                nameAr: foodbitCategoryResponse.name.ar || "",
-                menuId: menuId,
-                createdDate: foodbitCategoryResponse.createdDate
-              };
-
-              const categoiesDB = DB.insertCategories(accountConfig.SchemaName, categoryData)
-              return categoiesDB
-            } else {
-              const categoryFodbit: ICategoryFoodbit = {
-                name: {
-                  en: name[0].en,
-                  ar: name[0].ar,
-                },
-                menus: [{ id: menuId }],
-                isHidden: false,
-                merchantId: accountConfig.MerchantId
-              }
-              const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.updateCategory(accountConfig, categoryFodbit, categoryMapping.foodbitId)
-
-              const categoryUpdates: ICategoryMapping = {
-                nameEn: foodbitCategoryResponse.name.en || "",
-                nameAr: foodbitCategoryResponse.name.ar || "",
-                menuId: menuId,
-                updatedDate: foodbitCategoryResponse.lastUpdated
-              };
-              await DB.updateCategories(accountConfig.SchemaName, categoryUpdates, foodbitCategoryResponse.id)
-
+          const categoryMapping = categoriesMapping.find((catMapping => catMapping.revelId == category.id.toString()))
+          // //get menu id from db 
+          const menuMapping: IMenuMapping = await checkMenusMapping.find(menuMapping => {
+            if (menuMapping.nameEn == menu.menuName) {
+              return true; // return true to include the menuMapping in the result
             }
+          });
 
+          const menuId: string = await menuMapping ? menuMapping.foodbitId : ""; // use the foodbitId property if a menuMapping was found, otherwise use an empty string
+
+          // get name from revel and spilt by use function to ar / en 
+          const name: splitNameLanguag[] = Utils.splitNameByLanguage(category.name)
+
+          if (categoryMapping === undefined || categoryMapping === null) {
+            // create
+
+            const categoryFodbit: ICategoryFoodbit = {
+              name: {
+                en: name[0].en,
+                ar: name[0].ar,
+              },
+              menus: [{ id: menuId }],
+              entityType: EntityType.MENU_CATEGORY,
+              isHidden: false,
+              merchantId: accountConfig.MerchantId
+            }
+            const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.createCategory(accountConfig, categoryFodbit)
+
+            const categoryData: ICategoryMapping = {
+              revelId: category.id.toString(),
+              foodbitId: foodbitCategoryResponse.id,
+              nameEn: foodbitCategoryResponse.name.en || "",
+              nameAr: foodbitCategoryResponse.name.ar || "",
+              menuId: menuId,
+              createdDate: foodbitCategoryResponse.createdDate
+            };
+
+            const categoiesDB = DB.insertCategories(accountConfig.SchemaName, categoryData)
+            return categoiesDB
+          } else {
+            const categoryFodbit: ICategoryFoodbit = {
+              name: {
+                en: name[0].en,
+                ar: name[0].ar,
+              },
+              menus: [{ id: menuId }],
+              isHidden: false,
+              merchantId: accountConfig.MerchantId
+            }
+            const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.updateCategory(accountConfig, categoryFodbit, categoryMapping.foodbitId)
+
+            const categoryUpdates: ICategoryMapping = {
+              nameEn: foodbitCategoryResponse.name.en || "",
+              nameAr: foodbitCategoryResponse.name.ar || "",
+              menuId: menuId,
+              updatedDate: foodbitCategoryResponse.lastUpdated
+            };
+            await DB.updateCategories(accountConfig.SchemaName, categoryUpdates, foodbitCategoryResponse.id)
+
+          }
+
+        } catch (error) {
+
+          var date = Date.now()
+          const errorDetails: ISyncErrorMapping = {
+            revelId: category.id.toString(),
+            message: error.message,
+            syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
+            type: EntityType.MENU_CATEGORY
+          }
+          await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+        }
+      })
+
+
+    }))
+
+    //#endregion
+
+    //#region create product if not exist or update 
+
+    console.log("======================================================================================================")
+    console.log("===========================I'm in flow product============================")
+
+    const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.SchemaName)
+    await Promise.all(menus.map(async (menu) => {
+      menu.categories.map(async (category) => {
+        const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.SchemaName)
+        const categoryMapping: ICategoryMapping = categoriesMapping.find(cateMapping => {
+          if (cateMapping.revelId == category.id.toString()) {
+            return true; // return true to include the categoryMapping in the result
+          }
+        });
+
+        const categoryId: string = categoryMapping ? categoryMapping.foodbitId : "";
+
+        category.products.map(async (item) => {
+
+          try {
+
+            const itemMapping = itemsMapping.find((itemMap => itemMap.barcode == item.barcode))
+            // get name from revel and spilt by use function to ar / en 
+            const name: splitNameLanguag[] = Utils.splitNameByLanguage(item.name)
+            const description: splitNameLanguag[] = Utils.splitNameByLanguage(item.description)
+            if (itemMapping === undefined || itemMapping === null) {
+              console.log("I'm in create item")
+              //create
+              const itemFoodbit: IItemFoodbit = {
+                name: {
+                  en: name[0].en,
+                  ar: name[0].ar,
+                },
+                description: {
+                  en: description[0].en,
+                  ar: description[0].ar,
+                },
+                entityType: EntityType.MENU_ITEM,
+                isHidden: false,
+                merchantId: accountConfig.MerchantId,
+                profilePic: item.image,
+                // total :  ,
+                price: item.price
+                // calories?:string
+                // availability?: availability
+              }
+              const foodbitItemResponse: IItemFoodbit = await Foodbit.createItem(accountConfig, itemFoodbit)
+
+              const itemData: IItemMapping = {
+                revelId: item.id.toString(),
+                foodbitId: foodbitItemResponse.id,
+                nameEn: foodbitItemResponse.name.en || "",
+                nameAr: foodbitItemResponse.name.ar || "",
+                categoryId: categoryId,
+                price: foodbitItemResponse.price,
+                barcode: item.barcode,
+                createdDate: foodbitItemResponse.createdDate,
+              };
+              const itemsDB = DB.insertItems(accountConfig.SchemaName, itemData)
+              return itemsDB
+            } else {
+              //update
+              const itemFoodbit: IItemFoodbit = {
+                name: {
+                  en: name[0].en,
+                  ar: name[0].ar,
+                },
+                description: {
+                  en: description[0].en,
+                  ar: description[0].ar,
+                },
+                merchantId: accountConfig.MerchantId,
+                profilePic: item.image,
+                // total :  ,
+                price: item.price
+                // calories?:string
+                // availability?: availability
+              }
+              const foodbitItemResponse: IItemFoodbit = await Foodbit.updateItem(accountConfig, itemFoodbit, itemMapping.foodbitId)
+              const itemData: IItemMapping = {
+                nameEn: foodbitItemResponse.name.en || "",
+                nameAr: foodbitItemResponse.name.ar || "",
+                categoryId: categoryId,
+                price: foodbitItemResponse.price,
+                barcode: item.barcode,
+                updatedDate: foodbitItemResponse.lastUpdated,
+              };
+
+              await DB.updateItems(accountConfig.SchemaName, itemData, foodbitItemResponse.id)
+            }
           } catch (error) {
+            console.log(`Error in Flow Product ${error}`)
 
             var date = Date.now()
             const errorDetails: ISyncErrorMapping = {
-              revelId: category.id.toString(),
+              revelId: item.id.toString(),
               message: error.message,
               syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-              type: EntityType.MENU_CATEGORY
+              type: EntityType.MENU_ITEM
             }
             await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
           }
         })
+      })
 
+    }))
+    //#endregion
 
-      }))
+    //#region create optionSet if not exist or update 
+    console.log("======================================================================================================")
+    console.log("===========================I'm in flow optionSet/modifier class============================")
 
-      //#endregion
+    const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.SchemaName)
+    await Promise.all(
+      menus.map(async (menu) => {
+        menu.categories.map((category) => {
+          category.products.map((item) => {
+            item.modifier_classes.map(async (mod_class) => {
 
-      //#region create product if not exist or update 
+              try {
+                const optionSetMapping: IOptionSetMapping = optionSetsMapping.find(optionSet => optionSet.revelId == mod_class.id.toString())
 
-      console.log("======================================================================================================")
-      console.log("===========================I'm in flow product============================")
+                const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.SchemaName)
+                // //get menu id from db 
+                const itemMapping: IItemMapping = await itemsMapping.find(itemMap => {
+                  if (itemMap.revelId == item.id.toString()) {
+                    return true; // return true to include the itemMapping in the result
+                  }
+                });
 
-      const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.SchemaName)
-      await Promise.all(menus.map(async (menu) => {
-        menu.categories.map(async (category) => {
-          const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.SchemaName)
-          const categoryMapping: ICategoryMapping = categoriesMapping.find(cateMapping => {
-            if (cateMapping.revelId == category.id.toString()) {
-              return true; // return true to include the categoryMapping in the result
-            }
-          });
+                const itemId: string = await itemMapping ? itemMapping.foodbitId : ""; // use the foodbitId property if a itemMapping was found, otherwise use an empty string
+                // get name from revel and spilt by use function to ar / en 
+                const name: splitNameLanguag[] = Utils.splitNameByLanguage(mod_class.name)
+                if (optionSetMapping == undefined || optionSetMapping == null) {
+                  //create
+                  const optionSetFoodbit: IOptionSetFoodbit = {
+                    name: {
+                      en: name[0].en,
+                      ar: name[0].ar,
+                    },
+                    merchantId: accountConfig.MerchantId,
+                    menuItems: [{ id: itemId }],
+                    maximumNumberOfSelections: mod_class.maximum_amount,
+                    minimumNumberOfSelections: mod_class.minimum_amount,
+                    enableMinimumSelections: mod_class.active,
+                    enableMaximumSelections: mod_class.active,
+                    isHidden: mod_class.active,
+                    entityType: EntityType.MENU_OPTIONS
+                  }
+                  const foodbitOptionResponse: IOptionSetFoodbit = await Foodbit.createOptionSet(accountConfig, optionSetFoodbit)
 
-          const categoryId: string = categoryMapping ? categoryMapping.foodbitId : "";
+                  const optionSetData: IOptionSetMapping = {
+                    revelId: mod_class.id.toString(),
+                    foodbitId: foodbitOptionResponse.id,
+                    nameEn: foodbitOptionResponse.name.en || "",
+                    nameAr: foodbitOptionResponse.name.ar || "",
+                    createdDate: foodbitOptionResponse.createdDate,
+                  };
+                  DB.insertOptionSet(accountConfig.SchemaName, optionSetData)
+                } else {
+                  //update
 
-          category.products.map(async (item) => {
+                  console.log("I'm in update optionSet")
+                  const optionSetFoodbit: IOptionSetFoodbit = {
+                    name: {
+                      en: name[0].en,
+                      ar: name[0].ar,
+                    },
+                    merchantId: accountConfig.MerchantId,
+                    menuItems: [{ id: itemId }],
+                    maximumNumberOfSelections: mod_class.maximum_amount,
+                    minimumNumberOfSelections: mod_class.minimum_amount,
+                    enableMinimumSelections: mod_class.active,
+                    enableMaximumSelections: mod_class.active,
+                    isHidden: mod_class.active,
+                    entityType: EntityType.MENU_OPTIONS
+                  }
 
-            try {
+                  const foodbitOptionResponse: IOptionSetFoodbit = await Foodbit.updateOptionSet(accountConfig, optionSetFoodbit, optionSetMapping.foodbitId)
+                  const optionSetData: IOptionSetMapping = {
+                    nameEn: foodbitOptionResponse.name.en || "",
+                    nameAr: foodbitOptionResponse.name.ar || "",
+                    updatedDate: foodbitOptionResponse.lastUpdated,
+                  };
 
-              const itemMapping = itemsMapping.find((itemMap => itemMap.barcode == item.barcode))
-              // get name from revel and spilt by use function to ar / en 
-              const name: splitNameLanguag[] = Utils.splitNameByLanguage(item.name)
-              const description: splitNameLanguag[] = Utils.splitNameByLanguage(item.description)
-              if (itemMapping === undefined || itemMapping === null) {
-                console.log("I'm in create item")
-                //create
-                const itemFoodbit: IItemFoodbit = {
-                  name: {
-                    en: name[0].en,
-                    ar: name[0].ar,
-                  },
-                  description: {
-                    en: description[0].en,
-                    ar: description[0].ar,
-                  },
-                  entityType: EntityType.MENU_ITEM,
-                  isHidden: false,
-                  merchantId: accountConfig.MerchantId,
-                  profilePic: item.image,
-                  // total :  ,
-                  price: item.price
-                  // calories?:string
-                  // availability?: availability
+                  await DB.updateOptionSet(accountConfig.SchemaName, optionSetData, foodbitOptionResponse.id)
                 }
-                const foodbitItemResponse: IItemFoodbit = await Foodbit.createItem(accountConfig, itemFoodbit)
+              } catch (error) {
+                console.log(`Error in Flow OptionSet ${error}`)
 
-                const itemData: IItemMapping = {
-                  revelId: item.id.toString(),
-                  foodbitId: foodbitItemResponse.id,
-                  nameEn: foodbitItemResponse.name.en || "",
-                  nameAr: foodbitItemResponse.name.ar || "",
-                  categoryId: categoryId,
-                  price: foodbitItemResponse.price,
-                  barcode: item.barcode,
-                  createdDate: foodbitItemResponse.createdDate,
-                };
-                const itemsDB = DB.insertItems(accountConfig.SchemaName, itemData)
-                return itemsDB
-              } else {
-                //update
-                const itemFoodbit: IItemFoodbit = {
-                  name: {
-                    en: name[0].en,
-                    ar: name[0].ar,
-                  },
-                  description: {
-                    en: description[0].en,
-                    ar: description[0].ar,
-                  },
-                  merchantId: accountConfig.MerchantId,
-                  profilePic: item.image,
-                  // total :  ,
-                  price: item.price
-                  // calories?:string
-                  // availability?: availability
+                var date = Date.now()
+
+                const errorDetails: ISyncErrorMapping = {
+                  revelId: mod_class.id.toString(),
+                  message: error.message,
+                  syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
+                  type: EntityType.MENU_OPTIONS
                 }
-                const foodbitItemResponse: IItemFoodbit = await Foodbit.updateItem(accountConfig, itemFoodbit, itemMapping.foodbitId)
-                const itemData: IItemMapping = {
-                  nameEn: foodbitItemResponse.name.en || "",
-                  nameAr: foodbitItemResponse.name.ar || "",
-                  categoryId: categoryId,
-                  price: foodbitItemResponse.price,
-                  barcode: item.barcode,
-                  updatedDate: foodbitItemResponse.lastUpdated,
-                };
-
-                await DB.updateItems(accountConfig.SchemaName, itemData, foodbitItemResponse.id)
+                await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
               }
-            } catch (error) {
-              console.log(`Error in Flow Product ${error}`)
 
-              var date = Date.now()
-              const errorDetails: ISyncErrorMapping = {
-                revelId: item.id.toString(),
-                message: error.message,
-                syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-                type: EntityType.MENU_ITEM
-              }
-              await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
-            }
+
+            })
           })
         })
-
       }))
-      //#endregion
+    //#endregion 
 
-      //#region create optionSet if not exist or update 
-      console.log("======================================================================================================")
-      console.log("===========================I'm in flow optionSet/modifier class============================")
+    //#region create optionItem if not exist or update 
+    console.log("======================================================================================================")
+    console.log("===========================I'm in flow optionItem/modifier ============================")
 
-      const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.SchemaName)
-      await Promise.all(
-        menus.map(async (menu) => {
-          menu.categories.map((category) => {
-            category.products.map((item) => {
-              item.modifier_classes.map(async (mod_class) => {
+    const optionItemsMapping: IOptionItemMapping[] = await DB.getOptionItem(accountConfig.SchemaName)
+    await Promise.all(
+      menus.map(async (menu) => {
+        menu.categories.map((category) => {
+          category.products.map((item) => {
+            item.modifier_classes.map(async (mod_class) => {
+              mod_class.modifiers.map(async (modifier) => {
 
                 try {
-                  const optionSetMapping: IOptionSetMapping = optionSetsMapping.find(optionSet => optionSet.revelId == mod_class.id.toString())
+                  const optionItemMapping: IOptionItemMapping = optionItemsMapping.find(optionItem => optionItem.revelId == modifier.id.toString())
 
-                  const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.SchemaName)
+                  // get optionSet is to pass this id in option item 
+                  const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.SchemaName)
+
                   // //get menu id from db 
-                  const itemMapping: IItemMapping = await itemsMapping.find(itemMap => {
-                    if (itemMap.revelId == item.id.toString()) {
-                      return true; // return true to include the itemMapping in the result
+                  const optionMapping: IOptionSetMapping = await optionSetsMapping.find(option => {
+                    console.log(`option.revelId ${option.revelId}`)
+                    console.log(`modifier.id.toString() ${modifier.id.toString()}`)
+                    if (option.revelId == mod_class.id.toString()) {
+                      return true; // return true to include the optionMapping in the result
+                    } else {
+                      return false;
                     }
                   });
+                  console.log(`this is optionSetId to craete optionItem ${optionMapping}`)
 
-                  const itemId: string = await itemMapping ? itemMapping.foodbitId : ""; // use the foodbitId property if a itemMapping was found, otherwise use an empty string
+                  const optionSetId: string = await optionMapping ? optionMapping.foodbitId : null; // use the foodbitId property if a optionMapping was found, otherwise use an empty string
+
                   // get name from revel and spilt by use function to ar / en 
-                  const name: splitNameLanguag[] = Utils.splitNameByLanguage(mod_class.name)
-                  if (optionSetMapping == undefined || optionSetMapping == null) {
-                    //create
-                    const optionSetFoodbit: IOptionSetFoodbit = {
+                  const name: splitNameLanguag[] = Utils.splitNameByLanguage(modifier.name)
+                  // check if optionItemMapping empty=>create or not=>update 
+                  if (optionItemMapping == undefined || optionItemMapping == null) {
+                    //create 
+                    const optionItemFoodbit: IOptionItemFoodbit = {
                       name: {
                         en: name[0].en,
                         ar: name[0].ar,
                       },
                       merchantId: accountConfig.MerchantId,
-                      menuItems: [{ id: itemId }],
-                      maximumNumberOfSelections: mod_class.maximum_amount,
-                      minimumNumberOfSelections: mod_class.minimum_amount,
-                      enableMinimumSelections: mod_class.active,
-                      enableMaximumSelections: mod_class.active,
-                      isHidden: mod_class.active,
-                      entityType: EntityType.MENU_OPTIONS
+                      isHidden: modifier.active,
+                      entityType: EntityType.MENU_OPTION_ITEM,
+                      price: modifier.price,
+                      optionSets: [{ id: optionSetId }],
                     }
-                    const foodbitOptionResponse: IOptionSetFoodbit = await Foodbit.createOptionSet(accountConfig, optionSetFoodbit)
+                    const foodbitOptionItemResponse: IOptionItemFoodbit[] = await Foodbit.craeteOptionItem(accountConfig, optionItemFoodbit)
 
-                    const optionSetData: IOptionSetMapping = {
-                      revelId: mod_class.id.toString(),
-                      foodbitId: foodbitOptionResponse.id,
-                      nameEn: foodbitOptionResponse.name.en || "",
-                      nameAr: foodbitOptionResponse.name.ar || "",
-                      createdDate: foodbitOptionResponse.createdDate,
+                    console.log(`foodbitOptionItemResponse ${foodbitOptionItemResponse}`)
+                    const optionItemData: IOptionItemMapping = {
+                      revelId: modifier.id.toString(),
+                      foodbitId: foodbitOptionItemResponse[0].id,
+                      nameEn: foodbitOptionItemResponse[0].name.en || "",
+                      nameAr: foodbitOptionItemResponse[0].name.ar || "",
+                      createdDate: foodbitOptionItemResponse[0].createdDate,
+                      price: foodbitOptionItemResponse[0].price,
                     };
-                    DB.insertOptionSet(accountConfig.SchemaName, optionSetData)
+                    DB.insertOptionItem(accountConfig.SchemaName, optionItemData)
+
+
                   } else {
                     //update
-
-                    console.log("I'm in update optionSet")
-                    const optionSetFoodbit: IOptionSetFoodbit = {
+                    console.log("I'm in update optionItem")
+                    const optionItemFoodbit: IOptionItemFoodbit = {
                       name: {
                         en: name[0].en,
                         ar: name[0].ar,
                       },
                       merchantId: accountConfig.MerchantId,
-                      menuItems: [{ id: itemId }],
-                      maximumNumberOfSelections: mod_class.maximum_amount,
-                      minimumNumberOfSelections: mod_class.minimum_amount,
-                      enableMinimumSelections: mod_class.active,
-                      enableMaximumSelections: mod_class.active,
-                      isHidden: mod_class.active,
-                      entityType: EntityType.MENU_OPTIONS
+                      isHidden: modifier.active,
+                      price: modifier.price,
+                      optionSets: [{ id: optionSetId }],
                     }
-
-                    const foodbitOptionResponse: IOptionSetFoodbit = await Foodbit.updateOptionSet(accountConfig, optionSetFoodbit, optionSetMapping.foodbitId)
-                    const optionSetData: IOptionSetMapping = {
-                      nameEn: foodbitOptionResponse.name.en || "",
-                      nameAr: foodbitOptionResponse.name.ar || "",
-                      updatedDate: foodbitOptionResponse.lastUpdated,
+                    const foodbitOptionItemResponse: IOptionItemFoodbit = await Foodbit.updateOptionItem(accountConfig, optionItemFoodbit, optionItemMapping.foodbitId)
+                    const optionItemData: IOptionItemMapping = {
+                      nameEn: foodbitOptionItemResponse.name.en || "",
+                      nameAr: foodbitOptionItemResponse.name.ar || "",
+                      updatedDate: foodbitOptionItemResponse.lastUpdated,
+                      price: foodbitOptionItemResponse.price,
                     };
-
-                    await DB.updateOptionSet(accountConfig.SchemaName, optionSetData, foodbitOptionResponse.id)
+                    await DB.updateOptionItem(accountConfig.SchemaName, optionItemData, foodbitOptionItemResponse.id)
                   }
+
                 } catch (error) {
-                  console.log(`Error in Flow OptionSet ${error}`)
+                  console.log(`Error in Flow OptionItem ${error}`)
 
                   var date = Date.now()
 
                   const errorDetails: ISyncErrorMapping = {
-                    revelId: mod_class.id.toString(),
+                    revelId: modifier.id.toString(),
                     message: error.message,
                     syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-                    type: EntityType.MENU_OPTIONS
+                    type: EntityType.MENU_OPTION_ITEM
                   }
                   await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
                 }
 
-
               })
             })
           })
-        }))
-      //#endregion 
-
-      //#region create optionItem if not exist or update 
-      console.log("======================================================================================================")
-      console.log("===========================I'm in flow optionItem/modifier ============================")
-
-      const optionItemsMapping: IOptionItemMapping[] = await DB.getOptionItem(accountConfig.SchemaName)
-      await Promise.all(
-        menus.map(async (menu) => {
-          menu.categories.map((category) => {
-            category.products.map((item) => {
-              item.modifier_classes.map(async (mod_class) => {
-                mod_class.modifiers.map(async (modifier) => {
-
-                  try {
-                    const optionItemMapping: IOptionItemMapping = optionItemsMapping.find(optionItem => optionItem.revelId == modifier.id.toString())
-
-                    // get optionSet is to pass this id in option item 
-                    const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.SchemaName)
-
-                    // //get menu id from db 
-                    const optionMapping: IOptionSetMapping = await optionSetsMapping.find(option => {
-                      console.log(`option.revelId ${option.revelId}`)
-                      console.log(`modifier.id.toString() ${modifier.id.toString()}`)
-                      if (option.revelId == mod_class.id.toString()) {
-                        return true; // return true to include the optionMapping in the result
-                      } else {
-                        return false;
-                      }
-                    });
-                    console.log(`this is optionSetId to craete optionItem ${optionMapping}`)
-
-                    const optionSetId: string = await optionMapping ? optionMapping.foodbitId : null; // use the foodbitId property if a optionMapping was found, otherwise use an empty string
-
-                    // get name from revel and spilt by use function to ar / en 
-                    const name: splitNameLanguag[] = Utils.splitNameByLanguage(modifier.name)
-                    // check if optionItemMapping empty=>create or not=>update 
-                    if (optionItemMapping == undefined || optionItemMapping == null) {
-                      //create 
-                      const optionItemFoodbit: IOptionItemFoodbit = {
-                        name: {
-                          en: name[0].en,
-                          ar: name[0].ar,
-                        },
-                        merchantId: accountConfig.MerchantId,
-                        isHidden: modifier.active,
-                        entityType: EntityType.MENU_OPTION_ITEM,
-                        price: modifier.price,
-                        optionSets: [{ id: optionSetId }],
-                      }
-                      const foodbitOptionItemResponse: IOptionItemFoodbit[] = await Foodbit.craeteOptionItem(accountConfig, optionItemFoodbit)
-
-                      console.log(`foodbitOptionItemResponse ${foodbitOptionItemResponse}`)
-                      const optionItemData: IOptionItemMapping = {
-                        revelId: modifier.id.toString(),
-                        foodbitId: foodbitOptionItemResponse[0].id,
-                        nameEn: foodbitOptionItemResponse[0].name.en || "",
-                        nameAr: foodbitOptionItemResponse[0].name.ar || "",
-                        createdDate: foodbitOptionItemResponse[0].createdDate,
-                        price: foodbitOptionItemResponse[0].price,
-                      };
-                      DB.insertOptionItem(accountConfig.SchemaName, optionItemData)
+        })
+      }))
+    //#endregion 
 
 
-                    } else {
-                      //update
-                      console.log("I'm in update optionItem")
-                      const optionItemFoodbit: IOptionItemFoodbit = {
-                        name: {
-                          en: name[0].en,
-                          ar: name[0].ar,
-                        },
-                        merchantId: accountConfig.MerchantId,
-                        isHidden: modifier.active,
-                        price: modifier.price,
-                        optionSets: [{ id: optionSetId }],
-                      }
-                      const foodbitOptionItemResponse: IOptionItemFoodbit = await Foodbit.updateOptionItem(accountConfig, optionItemFoodbit, optionItemMapping.foodbitId)
-                      const optionItemData: IOptionItemMapping = {
-                        nameEn: foodbitOptionItemResponse.name.en || "",
-                        nameAr: foodbitOptionItemResponse.name.ar || "",
-                        updatedDate: foodbitOptionItemResponse.lastUpdated,
-                        price: foodbitOptionItemResponse.price,
-                      };
-                      await DB.updateOptionItem(accountConfig.SchemaName, optionItemData, foodbitOptionItemResponse.id)
-                    }
-
-                  } catch (error) {
-                    console.log(`Error in Flow OptionItem ${error}`)
-
-                    var date = Date.now()
-
-                    const errorDetails: ISyncErrorMapping = {
-                      revelId: modifier.id.toString(),
-                      message: error.message,
-                      syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-                      type: EntityType.MENU_OPTION_ITEM
-                    }
-                    await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
-                  }
-
-                })
-              })
-            })
-          })
-        }))
-      //#endregion 
-
-    }
 
     context.res = {
       status: 200,
