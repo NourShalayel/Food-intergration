@@ -4,7 +4,7 @@ import { MethodEnum } from "../../Common/Enums/Method.enum"
 export interface IMenuFoodbit {
     id?: string
     name: names
-    stores : stores[]
+    stores: stores[]
     merchantId: string
     entityType: EntityType
     isHidden?: boolean
@@ -18,8 +18,8 @@ interface availability {
     isAvailableNow: boolean;
     isUnAvailable: boolean;
 }
-interface stores {
-    id : string
+export interface stores {
+    id: string
 }
 export interface ICategoryFoodbit {
     id?: string;
@@ -44,7 +44,8 @@ export interface IItemFoodbit {
     total?: number
     price?: number
     entityType?: EntityType.MENU_ITEM
-    isHidden?: boolean
+    isHidden?: boolean;
+    categoryId?: string;
     createdDate?: string;
     lastUpdated?: string;
 }
@@ -77,7 +78,7 @@ export interface IOptionItemFoodbit {
     isHidden?: boolean
     createdDate?: string;
     lastUpdated?: string;
-    taxable?:boolean
+    taxable?: boolean
 }
 
 interface names {

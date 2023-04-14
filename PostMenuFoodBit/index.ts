@@ -11,7 +11,7 @@ import { IMenuMapping } from "../Interface/SettingMapping/IMenuMapping.interface
 import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.interface";
 import { ILocationMapping } from "../Interface/SettingMapping/ILocationMapping.interface";
 import { Foodbit } from "../Helper/Foodbit";
-import { ICategoryFoodbit, IItemFoodbit, IMenuFoodbit, IOptionItemFoodbit, IOptionSetFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
+import { ICategoryFoodbit, IItemFoodbit, IMenuFoodbit, IOptionItemFoodbit, IOptionSetFoodbit, stores } from "../Interface/Foodbit/IMenuFoodbit.interface";
 import { EntityType } from "../Common/Enums/EntityType";
 import { IItemMapping } from "../Interface/SettingMapping/IItemMapping.interface";
 import { IOptionSetMapping } from "../Interface/SettingMapping/IOptionSetMapping.interface";
@@ -54,47 +54,44 @@ const PostMenuFoodBit: AzureFunction = async function (
     let menus: Menu[] = [];
     if (accountConfig.MenuStatus == "one") {
       //#region  get data from revel based on specific name and establishment
-      await Promise.all(
-        customMenusMapping.map(async () => {
-          const establishment = 12;
-          const name = "Menu";
-          try {
-            const revelResponse = await Revel.RevelSendRequest({
-              url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${establishment}&name=${name}`,
-              headers: {
-                contentType: "application/json",
-                token: `${accountConfig.RevelAuth}`,
-              },
-              method: MethodEnum.GET,
-            });
+      const establishment = 12;
+      const name = "Menu";
+      try {
+        const revelResponse = await Revel.RevelSendRequest({
+          url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${establishment}&name=${name}`,
+          headers: {
+            contentType: "application/json",
+            token: `${accountConfig.RevelAuth}`,
+          },
+          method: MethodEnum.GET,
+        });
 
-            const customMenu: CustomMenu = plainToClass(CustomMenu, revelResponse.data);
-            // await validate(menuData, {
-            //   whitelist: true,
-            //   forbidNonWhitelisted: true
-            // })
+        const customMenu: CustomMenu = plainToClass(CustomMenu, revelResponse.data);
+        // await validate(menuData, {
+        //   whitelist: true,
+        //   forbidNonWhitelisted: true
+        // })
 
-            const foodbitStoreIds: ILocationMapping = await locationsMapping.find(location => {
-              if (location.revelId === establishment) {
-                return location
-              } else return null
-            });
+        const foodbitStoreIds: ILocationMapping = await locationsMapping.find(location => {
+          if (location.revelId === establishment) {
+            return location
+          } else return null
+        });
 
-            console.log(foodbitStoreIds)
-            const menu: Menu = {
-              revelLocationId: establishment,
-              foodbitStoreId: foodbitStoreIds.foodbitId || null,
-              menuName: name,
-              categories: customMenu.categories,
-            };
+        console.log(foodbitStoreIds)
+        const menu: Menu = {
+          revelLocationId: establishment,
+          foodbitStoreId: foodbitStoreIds.foodbitId || null,
+          menuName: name,
+          categories: customMenu.categories,
+        };
 
-            menus = [...menus, menu];
+        menus = [...menus, menu];
 
-          } catch (error) {
-            console.log(error)
-          }
-        })
-      )
+      } catch (error) {
+        console.log(error)
+      }
+
       //#endregion 
 
       //#region create menu if not exsit or update 
@@ -106,53 +103,56 @@ const PostMenuFoodBit: AzureFunction = async function (
       const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
       // if menu not exist ==> create menu with data(name , )
 
-      await Promise.all(locationsMapping.map((location) => {
+      await Promise.all(menus.map(async (menu) => {
+        //check if this menu in database 
+        try {
+          const locations: stores[] = locationsMapping.map((location) => ({
+            id: location.foodbitId
+          }))
+          const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && (menuMapping.foodbitStoreId == menu.foodbitStoreId) || menuMapping.foodbitStoreId == JSON.stringify(locations).toString())
+          // get name from revel and spilt by use function to ar / en 
+          const name: splitNameLanguag[] = Utils.splitNameByLanguage(menu.menuName)
+          if (menuMapping === undefined || menuMapping === null || !menuMapping) {
 
-        menus.map(async (menu) => {
-          //check if this menu in database 
-          try {
-            const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
-            // get name from revel and spilt by use function to ar / en 
-            const name: splitNameLanguag[] = Utils.splitNameByLanguage(menu.menuName)
-            if (menuMapping === undefined || menuMapping === null || !menuMapping) {
-              const menuFoodbit: IMenuFoodbit = {
-                name: {
-                  en: name[0].en,
-                  ar: name[0].ar,
-                },
-                stores: [{ id: location.foodbitId }],
-                merchantId: accountConfig.MerchantId,
-                entityType: EntityType.MENU,
-                isHidden: false
-              };
-              const foodbitMenuResponse: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuFoodbit)
-              //insert in db
-              const menuData: IMenuMapping = {
-                foodbitId: foodbitMenuResponse.id,
-                nameEn: foodbitMenuResponse.name.en || "",
-                nameAr: foodbitMenuResponse.name.ar || "",
-                createdDate: foodbitMenuResponse.createdDate,
-                foodbitStoreId: menu.foodbitStoreId,
-              };
-              const menusDB = DB.insertMenus(accountConfig.SchemaName, menuData)
-  
-              return menusDB;
-            }
-          } catch (error) {
-            console.log(`Error in Flow Menu ${error}`)
-  
-            var date = Date.now()
-  
-            const errorDetails: ISyncErrorMapping = {
-              revelId: menu.menuName,
-              message: error.message,
-              syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-              type: EntityType.MENU
-            }
-            await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+            const menuFoodbit: IMenuFoodbit = {
+              name: {
+                en: name[0].en,
+                ar: name[0].ar,
+              },
+              stores: locations,
+              merchantId: accountConfig.MerchantId,
+              entityType: EntityType.MENU,
+              isHidden: false
+            };
+
+            const foodbitMenuResponse: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuFoodbit)
+            //insert in db
+            const menuData: IMenuMapping = {
+              foodbitId: foodbitMenuResponse.id,
+              nameEn: foodbitMenuResponse.name.en || "",
+              nameAr: foodbitMenuResponse.name.ar || "",
+              createdDate: foodbitMenuResponse.createdDate,
+              foodbitStoreId: JSON.stringify(locations).toString(),
+            };
+            const menusDB = DB.insertMenus(accountConfig.SchemaName, menuData)
+
+            return menusDB;
           }
-        })
-      }))
+        } catch (error) {
+          console.log(`Error in Flow Menu ${error}`)
+
+          var date = Date.now()
+
+          const errorDetails: ISyncErrorMapping = {
+            revelId: menu.menuName,
+            message: error.message,
+            syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
+            type: EntityType.MENU
+          }
+          await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+        }
+      })
+      )
 
 
       //#endregion
@@ -340,8 +340,6 @@ const PostMenuFoodBit: AzureFunction = async function (
           await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
         }
       })
-
-
     }))
 
     //#endregion
@@ -352,27 +350,27 @@ const PostMenuFoodBit: AzureFunction = async function (
     console.log("===========================I'm in flow product============================")
 
     const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.SchemaName)
+    const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.SchemaName)
     await Promise.all(menus.map(async (menu) => {
       menu.categories.map(async (category) => {
-        const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.SchemaName)
-        const categoryMapping: ICategoryMapping = categoriesMapping.find(cateMapping => {
+        const categoryMapping: ICategoryMapping = await categoriesMapping.find(cateMapping => {
           if (cateMapping.revelId == category.id.toString()) {
             return true; // return true to include the categoryMapping in the result
           }
         });
 
-        const categoryId: string = categoryMapping ? categoryMapping.foodbitId : "";
+        const categoryId: string = await categoryMapping ? categoryMapping.foodbitId : "";
 
         category.products.map(async (item) => {
-
           try {
 
             const itemMapping = itemsMapping.find((itemMap => itemMap.barcode == item.barcode))
             // get name from revel and spilt by use function to ar / en 
-            const name: splitNameLanguag[] = Utils.splitNameByLanguage(item.name)
-            const description: splitNameLanguag[] = Utils.splitNameByLanguage(item.description)
+            const name: splitNameLanguag[] = await Utils.splitNameByLanguage(item.name)
+            const description: splitNameLanguag[] = await Utils.splitNameByLanguage(item.description)
+
+
             if (itemMapping === undefined || itemMapping === null) {
-              console.log("I'm in create item")
               //create
               const itemFoodbit: IItemFoodbit = {
                 name: {
@@ -380,13 +378,14 @@ const PostMenuFoodBit: AzureFunction = async function (
                   ar: name[0].ar,
                 },
                 description: {
-                  en: description[0].en,
-                  ar: description[0].ar,
+                  en: description ? description[0].en : null,
+                  ar: description ? description[0].ar : null,
                 },
                 entityType: EntityType.MENU_ITEM,
                 isHidden: false,
                 merchantId: accountConfig.MerchantId,
                 profilePic: item.image,
+                categoryId: categoryId,
                 // total :  ,
                 price: item.price
                 // calories?:string
@@ -414,11 +413,13 @@ const PostMenuFoodBit: AzureFunction = async function (
                   ar: name[0].ar,
                 },
                 description: {
-                  en: description[0].en,
-                  ar: description[0].ar,
+                  en: description ? description[0].en : null,
+
+                  ar: description ? description[0].ar : null,
                 },
                 merchantId: accountConfig.MerchantId,
                 profilePic: item.image,
+                categoryId: categoryId,
                 // total :  ,
                 price: item.price
                 // calories?:string
@@ -586,9 +587,9 @@ const PostMenuFoodBit: AzureFunction = async function (
 
                   const optionSetId: string = await optionMapping ? optionMapping.foodbitId : null; // use the foodbitId property if a optionMapping was found, otherwise use an empty string
 
-                  // get name from revel and spilt by use function to ar / en 
+                  // // get name from revel and spilt by use function to ar / en 
                   const name: splitNameLanguag[] = Utils.splitNameByLanguage(modifier.name)
-                  // check if optionItemMapping empty=>create or not=>update 
+                  // // check if optionItemMapping empty=>create or not=>update 
                   if (optionItemMapping == undefined || optionItemMapping == null) {
                     //create 
                     const optionItemFoodbit: IOptionItemFoodbit = {
@@ -659,7 +660,6 @@ const PostMenuFoodBit: AzureFunction = async function (
         })
       }))
     //#endregion 
-
 
 
     context.res = {
