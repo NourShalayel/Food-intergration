@@ -27,6 +27,7 @@ const PostMenuFoodBit: AzureFunction = async function (
 ): Promise<void> {
   try {
 
+
     //#region  get revelAccount from header to get schemaName from database
     const account: string | undefined = req.headers.revelaccount;
     if (!account) {
@@ -38,7 +39,7 @@ const PostMenuFoodBit: AzureFunction = async function (
     }
     //#endregion
 
-    //#region DB Connection
+    //#region DataBase Connection
     const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
     const customMenusMapping: ICustomMenuMapping[] = await DB.getCustomMenu(
       accountConfig.SchemaName
@@ -664,7 +665,7 @@ const PostMenuFoodBit: AzureFunction = async function (
 
     context.res = {
       status: 200,
-      body: menus,
+      body: "Ok",
       headers: {
         "Content-Type": "application/json",
       },
