@@ -10,7 +10,9 @@ const SyncOrders: AzureFunction = async function (
 ): Promise<void> {
 
     try {
-
+        
+        // const baseURL: string = `https://${accountConfig.RevelAccount}.revelup.com/`;
+      
         //#region  get revelAccount from header to get schemaName from database
         const account: string | undefined = req.headers.revelaccount;
         if (!account) {
@@ -29,8 +31,9 @@ const SyncOrders: AzureFunction = async function (
         )
         console.log(locationsMapping)
         //#endregion
+       
+        // get data from postman or from logic app webhook
 
-        const baseURL: string = `https://${accountConfig.RevelAccount}.revelup.com/`;
 
 
 
