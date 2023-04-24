@@ -33,24 +33,34 @@ function* orchCallback(context) {
     }
     const getConfig = {};
     getConfig['account'] = account
-    const configData = yield context.df.callActivity('GetConfig', getConfig);
+    const configData = yield context.df.callActivity('ActivityGetConfig', getConfig);
 
     const accountConfig = configData[`accountConfig`]
+    const locationsMapping = configData[`locationsMapping`]
+
     //#endregion
     // let menus: Menu[] = [];
 
-    const singleMenu = {};
+    const accountName = {};
+    accountName['account'] = account
 
-    singleMenu['account'] = account
-
+    const createMenu = {};
     if (accountConfig.MenuStatus == "one") {
-        const SingleMenuRevel = yield context.df.callActivity('GetSingleMenuRevel', singleMenu);
-        const menus = SingleMenuRevel.data
-        
+        const OneMenuRevel = yield context.df.callActivity('ActivityGetOneMenuRevel', accountName);
+        const menus = OneMenuRevel.data
+        createMenu['menu'] = menus
+        createMenu['account'] = account
+        createMenu['accountConfig'] = accountConfig
+        createMenu['locationsMapping'] = locationsMapping
 
-        console.log(`menus ${JSON.stringify(menus)}`)
-        return menus
+        yield context.df.callActivity('ActivityCreateOneMenu', createMenu);
+        // console.log(`menus ${JSON.stringify(menus)}`)
     }
+
+    console.log(`before`)
+    yield context.df.callActivity('ActivityCreateCategory', createMenu);
+    console.log(`after`)
+
 }
 
 

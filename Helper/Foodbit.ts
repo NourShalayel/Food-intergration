@@ -30,12 +30,16 @@ export class Foodbit {
 
   public static createMenu = async ( accountConfig : IAccountConfig, menuData: IMenuFoodbit) => {
     try {
-
+      
+      console.log(`accountConfig.MerchantId ${JSON.stringify(accountConfig)}`)
+      console.log(`accountConfig.FoodbitToken ${await accountConfig['foodbitToken']}`)
+      console.log(`accountConfig.MerchantId ${await accountConfig['merchantId']}`)
+      console.log(`accountConfig.FoodbitToken ${await accountConfig.FoodbitToken}`)
       const menu = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig.FoodbitToken}`,
+          token: `${accountConfig['foodbitToken']}`,
         },
         method: MethodEnum.POST,
         data : menuData
@@ -50,10 +54,10 @@ export class Foodbit {
     try {
 
       const category = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/categories`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/categories`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig.FoodbitToken}`,
+          token: `${accountConfig['foodbitToken']}`,
         },
         method: MethodEnum.POST,
         data : categoryData
@@ -122,10 +126,10 @@ export class Foodbit {
   public static updateCategory =  async ( accountConfig : IAccountConfig, categoryData: ICategoryFoodbit , id : string) => {
     try {
       const category = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/categories/${id}`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/categories/${id}`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig.FoodbitToken}`,
+          token: `${accountConfig['foodbitToken']}`,
         },
         method: MethodEnum.PATCH,
         data : categoryData

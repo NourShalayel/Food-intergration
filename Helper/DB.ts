@@ -52,6 +52,7 @@ export class DB {
       const allMenus = await menu.findAll();
 
       const data: IMenuMapping[] = JSON.parse(JSON.stringify(allMenus));
+      console.log(`;akwjegbbbbbbbbbbbbb ${data}`)
       return data;
     } catch (error) {
       console.error(error);
@@ -363,5 +364,31 @@ export class DB {
       return error;
     }
   };
-}
+
+  public static updateMenu = async (
+    schemaName: string,
+    data: any,
+    count : number ,
+    foodbitId: string
+  ): Promise<any> => {
+    try {
+
+
+      const menu = IMenuMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const menuUpdates = (JSON.stringify(data));
+      // use sequlize to create
+
+      const items = await menu.update(
+        { categoryIds : menuUpdates.toString() , categoriesCount : count },
+        {
+          where: { foodbitId: foodbitId }
+        });
+
+      return items;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };}
 

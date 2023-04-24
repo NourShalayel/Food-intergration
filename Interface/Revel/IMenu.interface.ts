@@ -74,3 +74,7 @@ export class splitNameLanguag {
   en: string;
   ar: string;
 }
+
+export class ids {
+  id : string
+}

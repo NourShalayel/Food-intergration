@@ -6,5 +6,5 @@
       "direction": "in"
     }
   ],
-  "scriptFile": "../dist/GetSingleMenuRevel/index.js"
+  "scriptFile": "../dist/ActivityCreateCategory/index.js"
 }
