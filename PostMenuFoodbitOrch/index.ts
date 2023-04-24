@@ -57,9 +57,13 @@ function* orchCallback(context) {
         // console.log(`menus ${JSON.stringify(menus)}`)
     }
 
-    console.log(`before`)
-    yield context.df.callActivity('ActivityCreateCategory', createMenu);
-    console.log(`after`)
+    const createCategoryFoodbit =  yield context.df.callActivity('ActivityCreateCategory', createMenu);
+    const createItem = {};
+    createItem['account'] = account
+    createItem['categories'] = createCategoryFoodbit.categories
+    createItem['accountConfig'] = accountConfig
+
+    yield context.df.callActivity('ActivityCreateItem', createMenu);
 
 }
 

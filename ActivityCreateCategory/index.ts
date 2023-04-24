@@ -28,10 +28,11 @@ async function activityFunction(context) {
     //#region create category if not exist or update 
     console.log("======================================================================================================")
     console.log("===========================I'm in flow category============================")
-
+    let categoriesRevel;
     let categoryIds: ids[] = [];
-    let count : number = 0 ;
+    let count: number = 0;
     await Promise.all(menus.map(async (menu) => {
+        categoriesRevel = menu.categories
         menu.categories.map(async (category) => {
             const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schemaName'])
             try {
@@ -81,9 +82,9 @@ async function activityFunction(context) {
                     const categoryId: ids = {
                         id: categoryData.foodbitId.toString()
                     }
-                    
+
                     categoryIds = [...categoryIds, categoryId];
-                    await DB.updateMenu(accountConfig['schemaName'] , categoryIds , count, menuId)
+                    await DB.updateMenu(accountConfig['schemaName'], categoryIds, count, menuId)
 
                     return categoiesDB
                 } else {
@@ -122,6 +123,7 @@ async function activityFunction(context) {
         })
     }))
 
+    return categoriesRevel
     //#endregion
 }
 

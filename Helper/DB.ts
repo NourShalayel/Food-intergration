@@ -52,7 +52,6 @@ export class DB {
       const allMenus = await menu.findAll();
 
       const data: IMenuMapping[] = JSON.parse(JSON.stringify(allMenus));
-      console.log(`;akwjegbbbbbbbbbbbbb ${data}`)
       return data;
     } catch (error) {
       console.error(error);

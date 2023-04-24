@@ -72,10 +72,10 @@ export class Foodbit {
     try {
 
       const item = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig.MerchantId}/menus/items`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/items`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig.FoodbitToken}`,
+          token: `${accountConfig['foodbitToken']}`,
         },
         method: MethodEnum.POST,
         data : itemData
