@@ -9,8 +9,6 @@ export const IOptionSetMappingTable = sequelize.define(
         foodbitId: { type: DataType.STRING, primaryKey: true },
         nameEn: DataType.STRING,
         nameAr: DataType.STRING,
-        itemIds: DataType.STRING,
-        menuIds: DataType.STRING,
         createdDate: DataType.STRING,
         updatedDate: DataType.STRING,
     },
@@ -22,8 +20,6 @@ export interface IOptionSetMapping {
     foodbitId?: string;
     nameEn?: string;
     nameAr?: string;
-    itemIds?: string;
-    menuIds?: string;
     createdDate?: string;
     updatedDate?: string;
 }

@@ -21,7 +21,7 @@ import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.i
 import { IMenuMapping } from "../Interface/SettingMapping/IMenuMapping.interface"
 import { ISyncErrorMapping } from "../Interface/SettingMapping/ISyncError.interface"
 
-async function activityFunction(context) {
+const activityFunction: AzureFunction = async function (context: Context): Promise<string> {
 
     const accountConfig = context.bindingData.data.accountConfig
     const menus = context.bindingData.data.menu
@@ -84,7 +84,7 @@ async function activityFunction(context) {
                     }
 
                     categoryIds = [...categoryIds, categoryId];
-                    await DB.updateMenu(accountConfig['schemaName'], categoryIds, count, menuId)
+                    await DB.updateCategoryIds(accountConfig['schemaName'], categoryIds, count, menuId)
 
                     return categoiesDB
                 } else {

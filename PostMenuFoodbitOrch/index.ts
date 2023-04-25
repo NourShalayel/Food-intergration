@@ -48,6 +48,7 @@ function* orchCallback(context) {
     if (accountConfig.MenuStatus == "one") {
         const OneMenuRevel = yield context.df.callActivity('ActivityGetOneMenuRevel', accountName);
         const menus = OneMenuRevel.data
+        //one menu
         createMenu['menu'] = menus
         createMenu['account'] = account
         createMenu['accountConfig'] = accountConfig
@@ -55,15 +56,23 @@ function* orchCallback(context) {
 
         yield context.df.callActivity('ActivityCreateOneMenu', createMenu);
         // console.log(`menus ${JSON.stringify(menus)}`)
+    }else {
+        const AllMenuRevel = yield context.df.callActivity('ActivityGetAllMenuRevel', accountName);
+        
+        // all menu 
+        createMenu['menus'] = AllMenuRevel.data
+        yield context.df.callActivity('ActivityCreateManyMenu', createMenu);
+
+
+
     }
 
-    const createCategoryFoodbit =  yield context.df.callActivity('ActivityCreateCategory', createMenu);
-    const createItem = {};
-    createItem['account'] = account
-    createItem['categories'] = createCategoryFoodbit.categories
-    createItem['accountConfig'] = accountConfig
-
+    yield context.df.callActivity('ActivityCreateCategory', createMenu);
     yield context.df.callActivity('ActivityCreateItem', createMenu);
+    yield context.df.callActivity('ActivityCreateOptionSet', createMenu);
+    yield context.df.callActivity('ActivityCreateOptionItem', createMenu);
+
+
 
 }
 

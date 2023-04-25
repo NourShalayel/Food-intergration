@@ -364,15 +364,15 @@ export class DB {
     }
   };
 
-  public static updateMenu = async (
+    // update field categoriesIds from table menus 
+
+  public static updateCategoryIds = async (
     schemaName: string,
     data: any,
     count : number ,
     foodbitId: string
   ): Promise<any> => {
     try {
-
-
       const menu = IMenuMappingTable.schema(schemaName);
       //get data after posting and insert in database 
       const menuUpdates = (JSON.stringify(data));
@@ -389,5 +389,32 @@ export class DB {
       console.error(error);
       return error;
     }
-  };}
+  };
 
+  // update field itemIds from table caegories 
+  public static updateItemIds = async (
+    schemaName: string,
+    data: any,
+    foodbitId: string
+  ): Promise<any> => {
+    try {
+      const category = ICategoryMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const categoryUpdates = (JSON.stringify(data));
+      console.log(`categoryUpdates ${categoryUpdates}`)
+      // use sequlize to create
+
+      const categories = await category.update(
+        { itemIds : categoryUpdates.toString()},
+        {
+          where: { foodbitId: foodbitId }
+        });
+
+      return categories;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+}

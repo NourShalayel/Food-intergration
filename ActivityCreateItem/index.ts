@@ -16,12 +16,12 @@ import { DB } from "../Helper/DB"
 import { Foodbit } from "../Helper/Foodbit"
 import { Utils } from "../Helper/Utils"
 import { IItemFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface"
-import { splitNameLanguag } from "../Interface/Revel/IMenu.interface"
+import { ids, splitNameLanguag } from "../Interface/Revel/IMenu.interface"
 import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.interface"
 import { IItemMapping } from "../Interface/SettingMapping/IItemMapping.interface"
 import { ISyncErrorMapping } from "../Interface/SettingMapping/ISyncError.interface"
 
-async function activityFunction(context) {
+const activityFunction: AzureFunction = async function (context: Context): Promise<any> {
 
     const accountConfig = context.bindingData.data.accountConfig
     const menus = context.bindingData.data.menu
@@ -34,6 +34,8 @@ async function activityFunction(context) {
 
     const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig['schemaName'])
     const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schemaName'])
+    let itemsIds: ids[] = [];
+
     await Promise.all(menus.map(async (menu) => {
         menu.categories.map(async (category) => {
             const categoryMapping: ICategoryMapping = await categoriesMapping.find(cateMapping => {
@@ -42,7 +44,11 @@ async function activityFunction(context) {
                 }
             });
 
+            console.log(`categoryMapping ${categoryMapping}`)
+
             const categoryId: string = await categoryMapping ? categoryMapping.foodbitId : "";
+
+            console.log(`categoryId ${categoryId}`)
 
             category.products.map(async (item) => {
                 try {
@@ -87,6 +93,15 @@ async function activityFunction(context) {
                             createdDate: foodbitItemResponse.createdDate,
                         };
                         const itemsDB = DB.insertItems(accountConfig['schemaName'], itemData)
+
+                        // add item in list and add this list in category table ===> update category table 
+                        const itemId: ids = {
+                            id: itemData.foodbitId.toString()
+                        }
+
+                        console.log('categoryId ${categoryId')
+                        itemsIds = [...itemsIds, itemId];
+                        await DB.updateItemIds(accountConfig['schemaName'], itemsIds, categoryId)
                         return itemsDB
                     } else {
                         //update
@@ -118,7 +133,7 @@ async function activityFunction(context) {
                             updatedDate: foodbitItemResponse.lastUpdated,
                         };
 
-                        await DB.updateItems(accountConfig.SchemaName, itemData, foodbitItemResponse.id)
+                        await DB.updateItems(accountConfig['schemaName'], itemData, foodbitItemResponse.id)
                     }
                 } catch (error) {
                     console.log(`Error in Flow Product ${error}`)
