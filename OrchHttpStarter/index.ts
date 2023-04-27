@@ -9,10 +9,10 @@ const httpStart: AzureFunction = async function (context: Context, req: HttpRequ
     const client = df.getClient(context);
     const timeStamp = new Date().toISOString();
     const instanceId = `Migration_job_${timeStamp}`;
-    client.startNew('PostMenuFoodbitOrch',instanceId , account);
+    const menu = client.startNew('PostMenuFoodbitOrch',instanceId , account);
     return context.bindings.response = {
         status: 200,
-        body: { jop: "PostMenuFoodbitOrch", id: instanceId },
+        body: { jop: "PostMenuFoodbitOrch", id: instanceId  },
         headers: { 'Content-Type': 'application/json' }
     };
 };

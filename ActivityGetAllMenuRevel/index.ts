@@ -28,7 +28,6 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
     //#region  get data from revel based on specific name and establishment
 
     const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
-    console.log(`this is revel account ${JSON.stringify(accountConfig)}`)
     const locationsMapping: ILocationMapping[] = await DB.getLocations(
         accountConfig.SchemaName
     )
@@ -63,7 +62,6 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     } else return null
                 });
 
-                console.log(foodbitStoreIds)
                 const menu: Menu = {
                     revelLocationId: customMenuMapping.LocationId,
                     foodbitStoreId: foodbitStoreIds.foodbitId || null,
@@ -72,6 +70,9 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 };
 
                 menus = [...menus, menu];
+                return {
+                    'data': menus,
+                }
 
             } catch (error) {
                 console.log(error)
@@ -80,6 +81,9 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
     )
     //#endregion};
 
+    return {
+        'data': menus,
+    }
 }
 
 export default activityFunction;

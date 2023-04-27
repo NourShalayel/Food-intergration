@@ -21,17 +21,17 @@ import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.i
 import { IMenuMapping } from "../Interface/SettingMapping/IMenuMapping.interface"
 import { ISyncErrorMapping } from "../Interface/SettingMapping/ISyncError.interface"
 
-const activityFunction: AzureFunction = async function (context: Context): Promise<string> {
+const activityFunction: AzureFunction = async function (context: Context): Promise<any> {
 
     const accountConfig = context.bindingData.data.accountConfig
     const menus = context.bindingData.data.menu
     //#region create category if not exist or update 
-    console.log("======================================================================================================")
-    console.log("===========================I'm in flow category============================")
+
+    console.log("********************* activity 1 *********************")
     let categoriesRevel;
     let categoryIds: ids[] = [];
     let count: number = 0;
-    await Promise.all(menus.map(async (menu) => {
+   const createCategory =  await Promise.all(menus.map(async (menu) => {
         categoriesRevel = menu.categories
         menu.categories.map(async (category) => {
             const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schemaName'])
@@ -84,7 +84,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     }
 
                     categoryIds = [...categoryIds, categoryId];
-                    await DB.updateCategoryIds(accountConfig['schemaName'], categoryIds, count, menuId)
+                    // await DB.updateCategoryIds(accountConfig['schemaName'], categoryIds, count, menuId)
 
                     return categoiesDB
                 } else {
@@ -118,12 +118,12 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                     type: EntityType.MENU_CATEGORY
                 }
-                await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+                await DB.insertSyncError(accountConfig['schemaName'], errorDetails)
             }
         })
     }))
 
-    return categoriesRevel
+    return createCategory
     //#endregion
 }
 

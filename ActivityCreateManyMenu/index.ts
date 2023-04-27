@@ -23,15 +23,15 @@ import { ISyncErrorMapping } from "../Interface/SettingMapping/ISyncError.interf
 const activityFunction: AzureFunction = async function (context: Context): Promise<any> {
     const accountConfig = context.bindingData.data.accountConfig
     const locationsMapping = context.bindingData.data.locationsMapping
+    console.log(`JSON.stringify(accountConfi ${JSON.stringify(accountConfig)}`)
 
+    console.log(`accountConfig['schemaName'] ${accountConfig['schemaName']}`)
     const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig['schemaName'])
-    const menus = context.bindingData.data.menus
+    const menus = context.bindingData.data.menu
 
     //#region create menu if not exsit or update 
 
     // get all menu from database 
-    console.log("======================================================================================================")
-    console.log("===========================I'm in flow menu ============================")
 
     // if menu not exist ==> create menu with data(name , )
 
@@ -76,7 +76,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                 type: EntityType.MENU
             }
-            await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+            await DB.insertSyncError(accountConfig['schemaName'], errorDetails)
         }
     }));
     //#endregion

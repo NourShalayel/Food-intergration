@@ -29,7 +29,6 @@ async function activityFunction(context) {
     const name = "Menu";
 
     const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
-    console.log(`this is revel account ${JSON.stringify(accountConfig)}`)
     const locationsMapping: ILocationMapping[] = await DB.getLocations(
         accountConfig.SchemaName
     )
@@ -59,7 +58,6 @@ async function activityFunction(context) {
             } else return null
         });
 
-        console.log(foodbitStoreIds)
         const menu: Menu = {
             revelLocationId: establishment,
             foodbitStoreId: foodbitStoreIds.foodbitId || null,

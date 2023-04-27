@@ -28,11 +28,10 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
     const menus = context.bindingData.data.menu
 
     //#region create optionSet if not exist or update 
-    console.log("======================================================================================================")
-    console.log("===========================I'm in flow optionSet/modifier class============================")
+    console.log("========================== activity 3 ============================")
 
     const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig['schemaName'])
-    await Promise.all(
+    const createOptionSet = await Promise.all(
         menus.map(async (menu) => {
             menu.categories.map((category) => {
                 category.products.map((item) => {
@@ -117,7 +116,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                                 syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                                 type: EntityType.MENU_OPTIONS
                             }
-                            await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+                            await DB.insertSyncError(accountConfig['schemaName'], errorDetails)
                         }
 
 
@@ -126,6 +125,8 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
             })
         }))
     //#endregion 
+    return createOptionSet
+
 };
 
 export default activityFunction;

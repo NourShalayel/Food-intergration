@@ -205,8 +205,7 @@ const PostMenuFoodBit: AzureFunction = async function (
       //#region create menu if not exsit or update 
 
       // get all menu from database 
-      console.log("======================================================================================================")
-      console.log("===========================I'm in flow menu ============================")
+
 
       const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
       // if menu not exist ==> create menu with data(name , )

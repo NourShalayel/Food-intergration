@@ -28,15 +28,14 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
 
 
     //#region create product if not exist or update 
+    console.log("********************* activity 2 *********************")
 
-    console.log("======================================================================================================")
-    console.log("===========================I'm in flow product============================")
 
     const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig['schemaName'])
     const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schemaName'])
     let itemsIds: ids[] = [];
 
-    await Promise.all(menus.map(async (menu) => {
+  const createItem =   await Promise.all(menus.map(async (menu) => {
         menu.categories.map(async (category) => {
             const categoryMapping: ICategoryMapping = await categoriesMapping.find(cateMapping => {
                 if (cateMapping.revelId == category.id.toString()) {
@@ -44,11 +43,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 }
             });
 
-            console.log(`categoryMapping ${categoryMapping}`)
-
             const categoryId: string = await categoryMapping ? categoryMapping.foodbitId : "";
-
-            console.log(`categoryId ${categoryId}`)
 
             category.products.map(async (item) => {
                 try {
@@ -99,9 +94,8 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                             id: itemData.foodbitId.toString()
                         }
 
-                        console.log('categoryId ${categoryId')
                         itemsIds = [...itemsIds, itemId];
-                        await DB.updateItemIds(accountConfig['schemaName'], itemsIds, categoryId)
+                        // await DB.updateItemIds(accountConfig['schemaName'], itemsIds, categoryId)
                         return itemsDB
                     } else {
                         //update
@@ -145,7 +139,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                         syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                         type: EntityType.MENU_ITEM
                     }
-                    await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+                    await DB.insertSyncError(accountConfig['schemaName'], errorDetails)
                 }
             })
         })
@@ -153,6 +147,8 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
 
         //#endregion
     }))
+    return createItem
+
 };
 
 export default activityFunction;

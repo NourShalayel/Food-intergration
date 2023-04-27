@@ -24,13 +24,11 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
 
     //#region create menu if not exsit or update 
     // get all menu from database 
-    console.log("======================================================================================================")
-    console.log("===========================I'm in flow menu ============================")
+
 
     const accountConfig = context.bindingData.data.accountConfig
     const locationsMapping = context.bindingData.data.locationsMapping
 
-    console.log(`accountConfig.SchemaName ${accountConfig.schemaName}`)
     const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.schemaName)
     const menus = context.bindingData.data.menu
 
@@ -59,11 +57,8 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     isHidden: false
                 };
 
-                console.log(`menuFoodbit ${JSON.stringify(menuFoodbit)}`)
-                console.log(`accountConfig ${JSON.stringify(accountConfig)}`)
 
                 const foodbitMenuResponse: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuFoodbit)
-                console.log(`foodbitMenuResponsefoodbitMenuResponse ${JSON.stringify(foodbitMenuResponse)}`)
                 //insert in db
                 const menuData: IMenuMapping = {
                     foodbitId: foodbitMenuResponse.id,
@@ -87,7 +82,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                 type: EntityType.MENU
             }
-            await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+            await DB.insertSyncError(accountConfig['schemaName'], errorDetails)
         }
     })
     )

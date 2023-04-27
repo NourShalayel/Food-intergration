@@ -9,17 +9,12 @@
  *    function app in Kudu
  */
 
-import { HttpRequest } from "@azure/functions";
 import * as df from "durable-functions"
-import { DB } from "../Helper/DB";
-import { IAccountConfig } from "../Interface/IAccountConfig";
-import { ICustomMenuMapping } from "../Interface/SettingMapping/ICustomMenuMapping.interface";
-import { ILocationMapping } from "../Interface/SettingMapping/ILocationMapping.interface";
-import { Menu } from "../Interface/Revel/IMenu.interface";
-import { IOrchestrationFunctionContext } from "durable-functions/lib/src/iorchestrationfunctioncontext";
+
 
 function* orchCallback(context) {
 
+    const outputs = []
     //#region  get revelAccount from header to get schemaName from database
 
     const account: string | undefined = context.df.input;
@@ -45,34 +40,35 @@ function* orchCallback(context) {
     accountName['account'] = account
 
     const createMenu = {};
+    createMenu['account'] = account
+    createMenu['accountConfig'] = accountConfig
+    createMenu['locationsMapping'] = locationsMapping
     if (accountConfig.MenuStatus == "one") {
         const OneMenuRevel = yield context.df.callActivity('ActivityGetOneMenuRevel', accountName);
         const menus = OneMenuRevel.data
-        //one menu
         createMenu['menu'] = menus
-        createMenu['account'] = account
-        createMenu['accountConfig'] = accountConfig
-        createMenu['locationsMapping'] = locationsMapping
+        //one menu
 
         yield context.df.callActivity('ActivityCreateOneMenu', createMenu);
         // console.log(`menus ${JSON.stringify(menus)}`)
-    }else {
+    } else {
         const AllMenuRevel = yield context.df.callActivity('ActivityGetAllMenuRevel', accountName);
-        
+
         // all menu 
-        createMenu['menus'] = AllMenuRevel.data
+        createMenu['menu'] = AllMenuRevel.data
         yield context.df.callActivity('ActivityCreateManyMenu', createMenu);
-
-
-
     }
 
-    yield context.df.callActivity('ActivityCreateCategory', createMenu);
-    yield context.df.callActivity('ActivityCreateItem', createMenu);
-    yield context.df.callActivity('ActivityCreateOptionSet', createMenu);
-    yield context.df.callActivity('ActivityCreateOptionItem', createMenu);
 
+    outputs.push(yield context.df.callActivity('ActivityCreateCategory', createMenu))
 
+    outputs.push(yield context.df.callActivity('ActivityCreateItem', createMenu))
+
+    outputs.push(yield context.df.callActivity('ActivityCreateOptionSet', createMenu))
+
+    outputs.push(yield context.df.callActivity('ActivityCreateOptionItem', createMenu))
+
+    return outputs
 
 }
 
