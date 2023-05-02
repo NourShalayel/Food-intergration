@@ -12,6 +12,7 @@ import { IOptionItemMapping, IOptionItemMappingTable } from "../Interface/Settin
 import { IOptionSetMapping, IOptionSetMappingTable } from "../Interface/SettingMapping/IOptionSetMapping.interface";
 import { Op } from "sequelize";
 import { ISyncErrorMapping, ISyncErrorTable } from "../Interface/SettingMapping/ISyncError.interface";
+import { CustomerMappingTable, ICustomerMapping } from "../Interface/SettingMapping/ICustomerMapping.interface";
 export class DB {
   public static getAccountConfig = async (
     revelAccount: string
@@ -130,6 +131,41 @@ export class DB {
 
       const data: ILocationMapping[] = JSON.parse(JSON.stringify(locations));
       return data;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+  public static getCustomers = async (
+    schemaName: string
+  ): Promise<ICustomerMapping[]> => {
+    try {
+      const customer = CustomerMappingTable.schema(schemaName);
+      const customers = await customer.findAll();
+
+      const data: ICustomerMapping[] = JSON.parse(JSON.stringify(customers));
+      return data;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+  public static insertCustomers = async (
+    schemaName: string,
+    customersData: ICustomerMapping
+  ): Promise<any> => {
+    try {
+      const customer = CustomerMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const data: ICustomerMapping = JSON.parse(JSON.stringify(customersData));
+      // use sequlize to create
+
+      const customers = await customer.create({ ...data });
+      customers.save();
+
+      return customers;
     } catch (error) {
       console.error(error);
       return error;

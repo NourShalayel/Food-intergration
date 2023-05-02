@@ -1,41 +1,89 @@
-export interface  IOrderFoodbit {
-    id : string;
-    validated : string ;
-    status : string ; // maybe I make this enums 
-    type : string ; // and make this enums 
-    customer : {} ;
-    customerId : string ;
-    items : [] ;
-    orderNumber : string ;
-    merchantId : string ;
-    check : {} ;
-    version : string ;
-    tax : {} ;
-    meta : {} ;
-    total : number ;
-    subtotal : number ;
-    currency : {} ;
-    skipReview : boolean ;
-    zoneId : string ;
-    paymentTransaction : {}
+export interface IOrderFoodbit {
+    id: string;
+    validated: string;
+    status: string; // maybe I make this enums 
+    type: string; // and make this enums 
+    customer: customer;
+    customerId: string;
+    items: items[];
+    orderNumber: string;
+    merchantId: string;
+    check: check;
+    version: string;
+    tax: tax;
+    meta: meta;
+    total: number;
+    subtotal: number;
+    currency: {};
+    skipReview: boolean;
+    zoneId: string;
+    paymentTransaction: {}
 }
 
 
-export interface customer{
-    id : string ;
-    mixpanelIdentified : boolean ;
-    emailAddress : string ;
-    isHidden : boolean ;
-    isActive : boolean ;
-    isBlocked : boolean ;
-    isEmailVerified : boolean ;
-    name : string ;
-    phoneNumber : string ;
-    language : string ; // maybe make another interface 
-    region : string ;
-    timeZone : string ;
+export interface customer {
+    id: string;
+    mixpanelIdentified: boolean;
+    emailAddress: string;
+    isHidden: boolean;
+    isActive: boolean;
+    isBlocked: boolean;
+    isEmailVerified: boolean;
+    name: string;
+    phoneNumber: string;
+    language: string; // maybe make another interface 
+    region: string;
+    timeZone: string;
 }
 
+export interface items {
+    name: name
+    quantity: number
+    toGo: boolean
+    total: number
+    price: number
+    profilePic: string
+    isHidden: boolean
+    optionSets: optionSets[]
+    createdDate: string
+    id: string
+}
+
+export interface optionSets {
+    items: optionItem[]
+    saveOptionItems: boolean
+    isHidden: boolean
+    createdDate: string
+    id: string
+    name: name
+}
+
+export interface optionItem {
+    id: string
+    name: name
+    price: number
+    isHidden: boolean
+    notTaxable: boolean
+    createdDate: string
+}
+export interface name {
+    ar: string
+    en: string
+}
+export interface check {
+    storeId: string
+}
+export interface tax {
+    percentage: number
+    isTaxIncludedInPrices: boolean
+    value: number
+    createdDate: string
+    id: string
+}
+
+export interface meta {
+    taxableOrderAmount : number
+}
 // {
 //     "validated": true,
 //     "status": "NEW",

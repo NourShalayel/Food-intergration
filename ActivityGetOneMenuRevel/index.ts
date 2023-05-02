@@ -41,7 +41,7 @@ async function activityFunction(context) {
             url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${establishment}&name=${name}`,
             headers: {
                 contentType: "application/json",
-                token: `${accountConfig.RevelAuth}`,
+                token: `Bearer ${accountConfig.RevelAuth}`,
             },
             method: MethodEnum.GET,
         });

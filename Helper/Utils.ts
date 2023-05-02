@@ -1,3 +1,4 @@
+import { splitNameSpace } from "../Interface/Revel/ICustomerRevel.interface";
 import { splitNameLanguag } from "../Interface/Revel/IMenu.interface";
 
 export class Utils {
@@ -21,6 +22,20 @@ export class Utils {
 
     return names;
   }
+
+  public static splitSpaces(name: string): splitNameSpace[] {
+    console.log(`name ${name}`)
+    if(name){
+      const [firstName, lastname] = name.split(' ');
+      const names: splitNameSpace[] = [{
+        first_Name: firstName,
+        last_Name:  lastname,
+      }]
+      console.log(`names ${names}`)
+      return names
+    }
+  }
+
 }
 
 

@@ -10,13 +10,16 @@ export class Revel {
       url: req.url,
       headers: {
         "Content-Type": req.headers.contentType,
-        "API-AUTHENTICATION": `Bearer ${req.headers.token}`,
+        "API-AUTHENTICATION": ` ${req.headers.token}`,
       },
       data: req.data,
     };
 
     try {
+      console.log(`options ${JSON.stringify(options)}`)
       const result = await axios.request(options);
+      console.log(`result ${result}`)
+
       return result.data;
     } catch (error) {
       return error;

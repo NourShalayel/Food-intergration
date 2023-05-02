@@ -45,7 +45,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${customMenuMapping.LocationId}&name=${customMenuMapping.MenuName}`,
                     headers: {
                         contentType: "application/json",
-                        token: `${accountConfig.RevelAuth}`,
+                        token: `Bearer ${accountConfig.RevelAuth}`,
                     },
                     method: MethodEnum.GET,
                 });

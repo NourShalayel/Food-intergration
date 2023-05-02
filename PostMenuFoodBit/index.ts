@@ -62,7 +62,7 @@ const PostMenuFoodBit: AzureFunction = async function (
           url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${establishment}&name=${name}`,
           headers: {
             contentType: "application/json",
-            token: `${accountConfig.RevelAuth}`,
+            token: `Bearer ${accountConfig.RevelAuth}`,
           },
           method: MethodEnum.GET,
         });
@@ -168,11 +168,12 @@ const PostMenuFoodBit: AzureFunction = async function (
               url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${customMenuMapping.LocationId}&name=${customMenuMapping.MenuName}`,
               headers: {
                 contentType: "application/json",
-                token: `${accountConfig.RevelAuth}`,
+                token: `Bearer ${accountConfig.RevelAuth}`,
               },
               method: MethodEnum.GET,
             });
 
+            console.log(  `revelResponserevelResponserevelResponserevelResponse ${revelResponse}`)
             const customMenu: CustomMenu = plainToClass(CustomMenu, revelResponse.data);
             // await validate(menuData, {
             //   whitelist: true,
