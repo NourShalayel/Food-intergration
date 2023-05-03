@@ -1,19 +1,22 @@
 
 
 export class CustomerRevel {
-    first_name: string
-    last_name: string
-    email: string
-    address: string
-    phone_number: string
-    created_by?: string
-    updated_by?: string
+  id?: string
+  first_name: string
+  last_name: string
+  email: string
+  address: string
+  phone_number: string
+  created_by?: string
+  updated_by?: string
+  created_date?: string
+  updated_date?: string
 }
 
 export class splitNameSpace {
-    first_Name: string;
-    last_Name: string;
-  }
+  first_Name: string;
+  last_Name: string;
+}
 
 
 // {

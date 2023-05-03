@@ -11,8 +11,9 @@ import { IMenuMapping, IMenuMappingTable } from "../Interface/SettingMapping/IMe
 import { IOptionItemMapping, IOptionItemMappingTable } from "../Interface/SettingMapping/IOptionItemMapping.interface";
 import { IOptionSetMapping, IOptionSetMappingTable } from "../Interface/SettingMapping/IOptionSetMapping.interface";
 import { Op } from "sequelize";
-import { ISyncErrorMapping, ISyncErrorTable } from "../Interface/SettingMapping/ISyncError.interface";
 import { CustomerMappingTable, ICustomerMapping } from "../Interface/SettingMapping/ICustomerMapping.interface";
+import { IMenuSyncErrorMapping, IMenuSyncErrorTable } from "../Interface/SettingMapping/IMenuSyncError.interface";
+import { IOrderSyncErrorTable, IOrderSyncErrors } from "../Interface/SettingMapping/IOrderSyncErrors.interface";
 export class DB {
   public static getAccountConfig = async (
     revelAccount: string
@@ -278,6 +279,51 @@ export class DB {
     }
   };
 
+  
+  public static insertCustomer = async (
+    schemaName: string,
+    customerData: ICustomerMapping,
+  ): Promise<any> => {
+    try {
+      const customer = CustomerMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const data: ICustomerMapping = JSON.parse(JSON.stringify(customerData));
+      // use sequlize to create
+
+      const customers = await customer.create({ ...data });
+      customers.save();
+
+      return customers;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+  public static updateCustomer = async (
+    schemaName: string,
+    custoemrData: ICustomerMapping,
+    revelId: string
+  ): Promise<any> => {
+    try {
+
+      const customer = CustomerMappingTable.schema(schemaName);
+      //get data after post update and update in database 
+      const customerUpdates: ICategoryMapping = JSON.parse(JSON.stringify(custoemrData));
+      // use sequlize to create
+
+      const customers = await customer.update(
+        { ...customerUpdates },
+        {
+          where: { revelId: revelId }
+        });
+
+      return customers;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
   public static updateCategories = async (
     schemaName: string,
     categoriesData: ICategoryMapping,
@@ -380,14 +426,34 @@ export class DB {
     }
   };
 
-  public static insertSyncError = async (
+  public static insertMenuSyncError = async (
     schemaName: string,
-    errorDetails: ISyncErrorMapping,
+    errorDetails: IMenuSyncErrorMapping,
   ): Promise<any> => {
     try {
-      const error = ISyncErrorTable.schema(schemaName);
+      const error = IMenuSyncErrorTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: ICategoryMapping = JSON.parse(JSON.stringify(errorDetails));
+      const data: IMenuSyncErrorMapping = JSON.parse(JSON.stringify(errorDetails));
+      // use sequlize to create
+
+      const errors = await error.create({ ...data });
+      errors.save();
+
+      return errors;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+  public static insertOrderSyncError = async (
+    schemaName: string,
+    errorDetails: IOrderSyncErrors,
+  ): Promise<any> => {
+    try {
+      const error = IOrderSyncErrorTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const data: IOrderSyncErrors = JSON.parse(JSON.stringify(errorDetails));
       // use sequlize to create
 
       const errors = await error.create({ ...data });

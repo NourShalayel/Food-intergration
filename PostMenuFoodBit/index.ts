@@ -16,9 +16,9 @@ import { EntityType } from "../Common/Enums/EntityType";
 import { IItemMapping } from "../Interface/SettingMapping/IItemMapping.interface";
 import { IOptionSetMapping } from "../Interface/SettingMapping/IOptionSetMapping.interface";
 import { IOptionItemMapping } from "../Interface/SettingMapping/IOptionItemMapping.interface";
-import { ISyncErrorMapping } from "../Interface/SettingMapping/ISyncError.interface";
 import moment = require("moment");
 import { Utils } from "../Helper/Utils";
+import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface";
 const dasd = require('lodash');
 
 const PostMenuFoodBit: AzureFunction = async function (
@@ -144,13 +144,13 @@ const PostMenuFoodBit: AzureFunction = async function (
 
           var date = Date.now()
 
-          const errorDetails: ISyncErrorMapping = {
+          const errorDetails: IMenuSyncErrorMapping = {
             revelId: menu.menuName,
             message: error.message,
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
             type: EntityType.MENU
           }
-          await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+          await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
         }
       })
       )
@@ -246,13 +246,13 @@ const PostMenuFoodBit: AzureFunction = async function (
 
           var date = Date.now()
 
-          const errorDetails: ISyncErrorMapping = {
+          const errorDetails: IMenuSyncErrorMapping = {
             revelId: menu.menuName,
             message: error.message,
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
             type: EntityType.MENU
           }
-          await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+          await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
         }
       }));
       //#endregion
@@ -332,13 +332,13 @@ const PostMenuFoodBit: AzureFunction = async function (
         } catch (error) {
 
           var date = Date.now()
-          const errorDetails: ISyncErrorMapping = {
+          const errorDetails: IMenuSyncErrorMapping = {
             revelId: category.id.toString(),
             message: error.message,
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
             type: EntityType.MENU_CATEGORY
           }
-          await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+          await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
         }
       })
     }))
@@ -442,13 +442,13 @@ const PostMenuFoodBit: AzureFunction = async function (
             console.log(`Error in Flow Product ${error}`)
 
             var date = Date.now()
-            const errorDetails: ISyncErrorMapping = {
+            const errorDetails: IMenuSyncErrorMapping = {
               revelId: item.id.toString(),
               message: error.message,
               syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
               type: EntityType.MENU_ITEM
             }
-            await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+            await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
           }
         })
       })
@@ -540,13 +540,13 @@ const PostMenuFoodBit: AzureFunction = async function (
 
                 var date = Date.now()
 
-                const errorDetails: ISyncErrorMapping = {
+                const errorDetails: IMenuSyncErrorMapping = {
                   revelId: mod_class.id.toString(),
                   message: error.message,
                   syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                   type: EntityType.MENU_OPTIONS
                 }
-                await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+                await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
               }
 
 
@@ -646,13 +646,13 @@ const PostMenuFoodBit: AzureFunction = async function (
 
                   var date = Date.now()
 
-                  const errorDetails: ISyncErrorMapping = {
+                  const errorDetails: IMenuSyncErrorMapping = {
                     revelId: modifier.id.toString(),
                     message: error.message,
                     syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                     type: EntityType.MENU_OPTION_ITEM
                   }
-                  await DB.insertSyncError(accountConfig.SchemaName, errorDetails)
+                  await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
                 }
 
               })

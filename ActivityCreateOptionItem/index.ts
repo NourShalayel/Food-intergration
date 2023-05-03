@@ -19,7 +19,7 @@ import { IOptionItemFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface"
 import { splitNameLanguag } from "../Interface/Revel/IMenu.interface";
 import { IOptionItemMapping } from "../Interface/SettingMapping/IOptionItemMapping.interface";
 import { IOptionSetMapping } from "../Interface/SettingMapping/IOptionSetMapping.interface";
-import { ISyncErrorMapping } from "../Interface/SettingMapping/ISyncError.interface";
+import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface";
 
 const activityFunction: AzureFunction = async function (context: Context): Promise<any> {
   const accountConfig = context.bindingData.data.accountConfig
@@ -110,13 +110,13 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
 
                 var date = Date.now()
 
-                const errorDetails: ISyncErrorMapping = {
+                const errorDetails: IMenuSyncErrorMapping = {
                   revelId: modifier.id.toString(),
                   message: error.message,
                   syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                   type: EntityType.MENU_OPTION_ITEM
                 }
-                await DB.insertSyncError(accountConfig['schemaName'], errorDetails)
+                await DB.insertMenuSyncError(accountConfig['schemaName'], errorDetails)
               }
 
             })

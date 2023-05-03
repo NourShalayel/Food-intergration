@@ -3,11 +3,11 @@ import { sequelize } from "../../sequlizeConfig";
 import { EntityType } from "../../Common/Enums/EntityType";
 
 
-export const ISyncErrorTable = sequelize.define(
-    "SyncErrors",
+export const IOrderSyncErrorTable = sequelize.define(
+    "OrderSyncErrors",
     {
         id : { type: DataType.STRING, primaryKey: true , autoIncrement : true},
-        revelId:  DataType.STRING,
+        foodbitId:  DataType.STRING,
         message:  DataType.STRING,
         syncDate: DataType.STRING,
         type:  DataType.STRING,
@@ -16,9 +16,9 @@ export const ISyncErrorTable = sequelize.define(
     { createdAt: false, updatedAt: false }
 );
 
-export interface ISyncErrorMapping {
+export interface IOrderSyncErrors {
     id? : number
-    revelId: string;
+    foodbitId: string;
     message: string
     syncDate: string
     type: EntityType

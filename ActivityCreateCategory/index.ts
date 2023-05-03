@@ -19,7 +19,7 @@ import { ICategoryFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface"
 import { ids, splitNameLanguag } from "../Interface/Revel/IMenu.interface"
 import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.interface"
 import { IMenuMapping } from "../Interface/SettingMapping/IMenuMapping.interface"
-import { ISyncErrorMapping } from "../Interface/SettingMapping/ISyncError.interface"
+import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface"
 
 const activityFunction: AzureFunction = async function (context: Context): Promise<any> {
 
@@ -112,13 +112,13 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
             } catch (error) {
 
                 var date = Date.now()
-                const errorDetails: ISyncErrorMapping = {
+                const errorDetails: IMenuSyncErrorMapping = {
                     revelId: category.id.toString(),
                     message: error.message,
                     syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                     type: EntityType.MENU_CATEGORY
                 }
-                await DB.insertSyncError(accountConfig['schemaName'], errorDetails)
+                await DB.insertMenuSyncError(accountConfig['schemaName'], errorDetails)
             }
         })
     }))
