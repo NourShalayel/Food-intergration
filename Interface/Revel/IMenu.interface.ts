@@ -53,6 +53,7 @@ export class ModifierClasses {
   modifiers?: Modifiers[]
   maximum_amount?: number
   minimum_amount?: number
+  barcode?:string
 }
 
 export class Modifiers {

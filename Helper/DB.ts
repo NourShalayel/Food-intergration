@@ -1,4 +1,3 @@
-import { ICategoryFoodbit, IItemFoodbit, IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
 import {
   AccountConfigTabel,
   IAccountConfig,
@@ -14,6 +13,7 @@ import { Op } from "sequelize";
 import { CustomerMappingTable, ICustomerMapping } from "../Interface/SettingMapping/ICustomerMapping.interface";
 import { IMenuSyncErrorMapping, IMenuSyncErrorTable } from "../Interface/SettingMapping/IMenuSyncError.interface";
 import { IOrderSyncErrorTable, IOrderSyncErrors } from "../Interface/SettingMapping/IOrderSyncErrors.interface";
+import { IOrderMapping, IOrderMappingTable } from "../Interface/SettingMapping/IOrderMapping.interface";
 export class DB {
   public static getAccountConfig = async (
     revelAccount: string
@@ -299,6 +299,28 @@ export class DB {
       return error;
     }
   };
+
+    
+  public static insertOrder = async (
+    schemaName: string,
+    orderData:IOrderMapping ,
+  ): Promise<any> => {
+    try {
+      const order = IOrderMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const data: IOrderMapping = JSON.parse(JSON.stringify(orderData));
+      // use sequlize to create
+
+      const orders = await order.create({ ...data });
+      orders.save();
+
+      return orders;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
 
   public static updateCustomer = async (
     schemaName: string,

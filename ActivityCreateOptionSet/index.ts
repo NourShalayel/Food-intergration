@@ -75,6 +75,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                                     nameEn: foodbitOptionResponse.name.en || "",
                                     nameAr: foodbitOptionResponse.name.ar || "",
                                     createdDate: foodbitOptionResponse.createdDate,
+                                    barcode : mod_class.barcode ? mod_class.barcode.toString() : null
                                 };
                                 DB.insertOptionSet(accountConfig['schemaName'], optionSetData)
                             } else {

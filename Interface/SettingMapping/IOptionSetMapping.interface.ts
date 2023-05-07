@@ -11,15 +11,17 @@ export const IOptionSetMappingTable = sequelize.define(
         nameAr: DataType.STRING,
         createdDate: DataType.STRING,
         updatedDate: DataType.STRING,
+        barcode: DataType.STRING
     },
     { createdAt: false, updatedAt: false }
 );
 
 export interface IOptionSetMapping {
-    revelId?: string;
-    foodbitId?: string;
-    nameEn?: string;
-    nameAr?: string;
-    createdDate?: string;
-    updatedDate?: string;
+    revelId?: string
+    foodbitId?: string
+    nameEn?: string
+    nameAr?: string
+    createdDate?: string
+    updatedDate?: string
+    barcode?: string
 }

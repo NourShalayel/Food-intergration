@@ -505,6 +505,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                     nameEn: foodbitOptionResponse.name.en || "",
                     nameAr: foodbitOptionResponse.name.ar || "",
                     createdDate: foodbitOptionResponse.createdDate,
+                    barcode : mod_class.barcode.toString()
                   };
                   DB.insertOptionSet(accountConfig.SchemaName, optionSetData)
                 } else {
