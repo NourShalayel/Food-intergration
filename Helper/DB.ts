@@ -14,6 +14,7 @@ import { CustomerMappingTable, ICustomerMapping } from "../Interface/SettingMapp
 import { IMenuSyncErrorMapping, IMenuSyncErrorTable } from "../Interface/SettingMapping/IMenuSyncError.interface";
 import { IOrderSyncErrorTable, IOrderSyncErrors } from "../Interface/SettingMapping/IOrderSyncErrors.interface";
 import { IOrderMapping, IOrderMappingTable } from "../Interface/SettingMapping/IOrderMapping.interface";
+import { sequelize } from "../sequlizeConfig";
 export class DB {
   public static getAccountConfig = async (
     revelAccount: string
@@ -69,7 +70,6 @@ export class DB {
       const allCategories = await category.findAll();
 
       const data: ICategoryMapping[] = JSON.parse(JSON.stringify(allCategories));
-
       return data;
     } catch (error) {
       console.error(error);
@@ -199,19 +199,20 @@ export class DB {
     schemaName: string,
     categoriesData: ICategoryMapping,
   ): Promise<any> => {
+    const transaction= await sequelize.transaction();
     try {
-
-
       const category = ICategoryMappingTable.schema(schemaName);
       //get data after posting and insert in database 
       const data: ICategoryMapping = JSON.parse(JSON.stringify(categoriesData));
       // use sequlize to create
 
-      const categories = await category.create({ ...data });
-      categories.save();
-
+      const categories = await category.create({ ...data } , {transaction});
+      await transaction.commit()
+      console.log(`create category in insert categories`)
       return categories;
+
     } catch (error) {
+      await transaction.rollback();
       console.error(error);
       return error;
     }
@@ -279,7 +280,7 @@ export class DB {
     }
   };
 
-  
+
   public static insertCustomer = async (
     schemaName: string,
     customerData: ICustomerMapping,
@@ -300,10 +301,10 @@ export class DB {
     }
   };
 
-    
+
   public static insertOrder = async (
     schemaName: string,
-    orderData:IOrderMapping ,
+    orderData: IOrderMapping,
   ): Promise<any> => {
     try {
       const order = IOrderMappingTable.schema(schemaName);
@@ -488,12 +489,12 @@ export class DB {
     }
   };
 
-    // update field categoriesIds from table menus 
+  // update field categoriesIds from table menus 
 
   public static updateCategoryIds = async (
     schemaName: string,
     data: any,
-    count : number ,
+    count: number,
     foodbitId: string
   ): Promise<any> => {
     try {
@@ -503,7 +504,7 @@ export class DB {
       // use sequlize to create
 
       const items = await menu.update(
-        { categoryIds : menuUpdates.toString() , categoriesCount : count },
+        { categoryIds: menuUpdates.toString(), categoriesCount: count },
         {
           where: { foodbitId: foodbitId }
         });
@@ -529,7 +530,7 @@ export class DB {
       // use sequlize to create
 
       const categories = await category.update(
-        { itemIds : categoryUpdates.toString()},
+        { itemIds: categoryUpdates.toString() },
         {
           where: { foodbitId: foodbitId }
         });

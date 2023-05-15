@@ -81,9 +81,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
     )
     //#endregion};
 
-    return {
-        'data': menus,
-    }
+    return menus
 }
 
 export default activityFunction;

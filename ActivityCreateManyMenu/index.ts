@@ -27,15 +27,11 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
 
     console.log(`accountConfig['schemaName'] ${accountConfig['schemaName']}`)
     const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig['schemaName'])
-    const menus = context.bindingData.data.menu
-
+    const menu = context.bindingData.data.menu
+    let menuFoodbitId 
+    let menuName
     //#region create menu if not exsit or update 
 
-    // get all menu from database 
-
-    // if menu not exist ==> create menu with data(name , )
-
-    await Promise.all(menus.map(async (menu) => {
         //check if this menu in database 
         try {
             const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
@@ -61,9 +57,16 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     createdDate: foodbitMenuResponse.createdDate,
                     foodbitStoreId: menu.foodbitStoreId,
                 };
+                 menuFoodbitId =foodbitMenuResponse.id
+                 console.log(`menuFoodbitId ${menuFoodbitId}`)
+                  menuName = menu.menuName
                 const menusDB = DB.insertMenus(accountConfig['schemaName'], menuData)
 
                 return menusDB;
+            }else {
+                menuFoodbitId = menuMapping.foodbitId
+                console.log(`menuFoodbitId ${menuFoodbitId}`)
+
             }
         } catch (error) {
             console.log(`Error in Flow Menu ${error}`)
@@ -78,9 +81,13 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
             }
             await DB.insertMenuSyncError(accountConfig['schemaName'], errorDetails)
         }
-    }));
     //#endregion
 
+    return {
+        'categories': menu.categories,
+        'menuId':menuFoodbitId ,
+        'menuName' : menuName
+      }
 };
 
 export default activityFunction;
