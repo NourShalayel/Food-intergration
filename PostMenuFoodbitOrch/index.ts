@@ -56,27 +56,26 @@ function* orchCallback(context) {
 
         // all menu 
 
-
         for (const menu of AllMenuRevel) {
             createMenu['menu'] = menu
             const categories = yield context.df.callActivity('ActivityCreateManyMenu', createMenu);
             createMenu['categories'] = categories
             const items = yield context.df.callActivity('ActivityCreateCategory', createMenu)
             createMenu['items'] = items
-            yield context.df.callActivity('ActivityCreateItem', createMenu)
+            for (const item of items) {
+                createMenu['item'] = item
+                yield context.df.callActivity('ActivityCreateItem', createMenu)
+            }
+            yield context.df.callActivity('ActivityCreateOptionSet', createMenu)
+            yield context.df.callActivity('ActivityCreateOptionItem', createMenu)
         }
-
-
-
     }
 
 
 
     // yield context.df.callActivity('ActivityCreateItem', createMenu)
 
-    // yield context.df.callActivity('ActivityCreateOptionSet', createMenu)
 
-    // yield context.df.callActivity('ActivityCreateOptionItem', createMenu)
 
 }
 

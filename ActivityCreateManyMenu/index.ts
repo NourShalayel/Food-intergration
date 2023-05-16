@@ -28,66 +28,75 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
     console.log(`accountConfig['schemaName'] ${accountConfig['schemaName']}`)
     const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig['schemaName'])
     const menu = context.bindingData.data.menu
-    let menuFoodbitId 
+    let menuFoodbitId
     let menuName
     //#region create menu if not exsit or update 
 
-        //check if this menu in database 
-        try {
-            const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
-            // get name from revel and spilt by use function to ar / en 
-            const name: splitNameLanguag[] = Utils.splitNameByLanguage(menu.menuName)
-            if (menuMapping === undefined || menuMapping === null || !menuMapping) {
-                const menuFoodbit: IMenuFoodbit = {
-                    name: {
-                        en: name[0].en,
-                        ar: name[0].ar,
-                    },
-                    stores: [{ id: menu.foodbitStoreId }],
-                    merchantId: accountConfig.MerchantId,
-                    entityType: EntityType.MENU,
-                    isHidden: false
-                };
-                const foodbitMenuResponse: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuFoodbit)
-                //insert in db
-                const menuData: IMenuMapping = {
-                    foodbitId: foodbitMenuResponse.id,
-                    nameEn: foodbitMenuResponse.name.en || "",
-                    nameAr: foodbitMenuResponse.name.ar || "",
-                    createdDate: foodbitMenuResponse.createdDate,
-                    foodbitStoreId: menu.foodbitStoreId,
-                };
-                 menuFoodbitId =foodbitMenuResponse.id
-                 console.log(`menuFoodbitId ${menuFoodbitId}`)
-                  menuName = menu.menuName
-                const menusDB = DB.insertMenus(accountConfig['schemaName'], menuData)
-
-                return menusDB;
-            }else {
-                menuFoodbitId = menuMapping.foodbitId
-                console.log(`menuFoodbitId ${menuFoodbitId}`)
-
+    try {
+        const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
+        // get name from revel and spilt by use function to ar / en 
+        const name: splitNameLanguag[] = Utils.splitNameByLanguage(menu.menuName)
+        if (menuMapping === undefined || menuMapping === null || !menuMapping) {
+            const menuFoodbit: IMenuFoodbit = {
+                name: {
+                    en: name[0].en,
+                    ar: name[0].ar,
+                },
+                stores: [{ id: menu.foodbitStoreId }],
+                merchantId: accountConfig.MerchantId,
+                entityType: EntityType.MENU,
+                isHidden: false
+            };
+            const foodbitMenuResponse: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuFoodbit)
+            //insert in db
+            const menuData: IMenuMapping = {
+                foodbitId: foodbitMenuResponse.id,
+                nameEn: foodbitMenuResponse.name.en || "",
+                nameAr: foodbitMenuResponse.name.ar || "",
+                createdDate: foodbitMenuResponse.createdDate,
+                foodbitStoreId: menu.foodbitStoreId,
+            };
+            menuFoodbitId = foodbitMenuResponse.id
+            console.log(`menuFoodbitId ${menuFoodbitId}`)
+            menuName = menu.menuName
+            new Promise((resolve, rejects) => {
+                DB.insertMenus(accountConfig['schemaName'], menuData)
+                    .then((value) => {
+                        resolve(value)
+                    }).catch((err) => {
+                        rejects(err)
+                    })
+            })
+            return {
+                'categories': menu.categories,
+                'menuId': menuFoodbitId,
+                'menuName': menuName
             }
-        } catch (error) {
-            console.log(`Error in Flow Menu ${error}`)
-
-            var date = Date.now()
-
-            const errorDetails: IMenuSyncErrorMapping = {
-                revelId: menu.menuName,
-                message: error.message,
-                syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-                type: EntityType.MENU
+        } else {
+            menuFoodbitId = menuMapping.foodbitId
+            return {
+                'categories': menu.categories,
+                'menuId': menuFoodbitId,
+                'menuName': menuName
             }
-            await DB.insertMenuSyncError(accountConfig['schemaName'], errorDetails)
         }
+    } catch (error) {
+        console.log(`Error in Flow Menu ${error}`)
+
+        var date = Date.now()
+
+        const errorDetails: IMenuSyncErrorMapping = {
+            revelId: menu.menuName,
+            message: error.message,
+            syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
+            type: EntityType.MENU
+        }
+        await DB.insertMenuSyncError(accountConfig['schemaName'], errorDetails)
+    }
+
     //#endregion
 
-    return {
-        'categories': menu.categories,
-        'menuId':menuFoodbitId ,
-        'menuName' : menuName
-      }
+
 };
 
 export default activityFunction;
