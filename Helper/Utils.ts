@@ -36,7 +36,11 @@ export class Utils {
     }
   }
 
+  public static sleep(delay) {
+    return new Promise(resolve => setTimeout(resolve, delay));
+  }
 }
+
 
 
 // public static List<string> spiltNameByLanguage(string revelName)

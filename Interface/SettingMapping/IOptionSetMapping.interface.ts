@@ -11,7 +11,8 @@ export const IOptionSetMappingTable = sequelize.define(
         nameAr: DataType.STRING,
         createdDate: DataType.STRING,
         updatedDate: DataType.STRING,
-        barcode: DataType.STRING
+        barcode: DataType.STRING,
+        itemIds : DataType.STRING
     },
     { createdAt: false, updatedAt: false }
 );
@@ -24,4 +25,5 @@ export interface IOptionSetMapping {
     createdDate?: string
     updatedDate?: string
     barcode?: string
+    itemIds?:string
 }

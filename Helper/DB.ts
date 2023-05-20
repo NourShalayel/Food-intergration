@@ -18,11 +18,11 @@ import { sequelize } from "../sequlizeConfig";
 export class DB {
   public static getAccountConfig = async (
     revelAccount: string
-  ): Promise<IAccountConfig> => {
+  ) => {
     try {
       const accountConfig = AccountConfigTabel.schema("AccountsConfig");
       const accountData = await accountConfig.findOne({
-        where: { RevelAccount: revelAccount },
+        where: { revel_account: revelAccount },
       });
       const data: IAccountConfig = JSON.parse(JSON.stringify(accountData));
       return data;
@@ -34,12 +34,12 @@ export class DB {
 
   public static getCustomMenu = async (
     schemaName: string
-  ): Promise<ICustomMenuMapping[]> => {
+  ) => {
     try {
       const customMenu = CustomMenuTable.schema(schemaName);
       const getAll = await customMenu.findAll();
 
-      const data: ICustomMenuMapping[] = JSON.parse(JSON.stringify(getAll));
+      const data: ICustomMenuMapping[] = await JSON.parse(JSON.stringify(getAll));
       return data;
     } catch (error) {
       console.error(error);
@@ -49,12 +49,12 @@ export class DB {
 
   public static getMenus = async (
     schemaName: string
-  ): Promise<IMenuMapping[]> => {
+  ) => {
     try {
       const menu = IMenuMappingTable.schema(schemaName);
       const allMenus = await menu.findAll();
 
-      const data: IMenuMapping[] = JSON.parse(JSON.stringify(allMenus));
+      const data: IMenuMapping[] = await JSON.parse(JSON.stringify(allMenus));
       return data;
     } catch (error) {
       console.error(error);
@@ -64,12 +64,12 @@ export class DB {
 
   public static getCategories = async (
     schemaName: string
-  ): Promise<ICategoryMapping[]> => {
+  ) => {
     try {
       const category = ICategoryMappingTable.schema(schemaName);
       const allCategories = await category.findAll();
 
-      const data: ICategoryMapping[] = JSON.parse(JSON.stringify(allCategories));
+      const data: ICategoryMapping[] = await JSON.parse(JSON.stringify(allCategories));
       return data;
     } catch (error) {
       console.error(error);
@@ -79,12 +79,12 @@ export class DB {
 
   public static getItems = async (
     schemaName: string
-  ): Promise<IItemMapping[]> => {
+  ) => {
     try {
       const item = IItemMappingTable.schema(schemaName);
       const allItems = await item.findAll();
 
-      const data: IItemMapping[] = JSON.parse(JSON.stringify(allItems));
+      const data: IItemMapping[] = await JSON.parse(JSON.stringify(allItems));
       return data;
     } catch (error) {
       console.error(error);
@@ -94,12 +94,12 @@ export class DB {
 
   public static getOptionItem = async (
     schemaName: string
-  ): Promise<IOptionItemMapping[]> => {
+  ) => {
     try {
       const optionItem = IOptionItemMappingTable.schema(schemaName);
       const allOptionItem = await optionItem.findAll();
 
-      const data: IOptionItemMapping[] = JSON.parse(JSON.stringify(allOptionItem));
+      const data: IOptionItemMapping[] = await JSON.parse(JSON.stringify(allOptionItem));
       return data;
     } catch (error) {
       console.error(error);
@@ -109,12 +109,12 @@ export class DB {
 
   public static getOptionSet = async (
     schemaName: string
-  ): Promise<IOptionSetMapping[]> => {
+  ) => {
     try {
       const option = IOptionSetMappingTable.schema(schemaName);
       const allOption = await option.findAll();
 
-      const data: IOptionSetMapping[] = JSON.parse(JSON.stringify(allOption));
+      const data: IOptionSetMapping[] = await JSON.parse(JSON.stringify(allOption));
       return data;
     } catch (error) {
       console.error(error);
@@ -125,12 +125,12 @@ export class DB {
 
   public static getLocations = async (
     schemaName: string
-  ): Promise<ILocationMapping[]> => {
+  ) => {
     try {
       const location = LocationMappingTable.schema(schemaName);
       const locations = await location.findAll();
 
-      const data: ILocationMapping[] = JSON.parse(JSON.stringify(locations));
+      const data: ILocationMapping[] = await JSON.parse(JSON.stringify(locations));
       return data;
     } catch (error) {
       console.error(error);
@@ -140,12 +140,12 @@ export class DB {
 
   public static getCustomers = async (
     schemaName: string
-  ): Promise<ICustomerMapping[]> => {
+  ) => {
     try {
       const customer = CustomerMappingTable.schema(schemaName);
       const customers = await customer.findAll();
 
-      const data: ICustomerMapping[] = JSON.parse(JSON.stringify(customers));
+      const data: ICustomerMapping[] = await JSON.parse(JSON.stringify(customers));
       return data;
     } catch (error) {
       console.error(error);
@@ -156,15 +156,15 @@ export class DB {
   public static insertCustomers = async (
     schemaName: string,
     customersData: ICustomerMapping
-  ): Promise<any> => {
+  ) => {
     try {
       const customer = CustomerMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: ICustomerMapping = JSON.parse(JSON.stringify(customersData));
+      const data: ICustomerMapping = await JSON.parse(JSON.stringify(customersData));
       // use sequlize to create
 
       const customers = await customer.create({ ...data });
-      customers.save();
+      await customers.save();
 
       return customers;
     } catch (error) {
@@ -176,17 +176,17 @@ export class DB {
   public static insertMenus = async (
     schemaName: string,
     menusData: IMenuMapping
-  ): Promise<any> => {
+  ) => {
     try {
 
 
       const menu = IMenuMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: IMenuMapping = JSON.parse(JSON.stringify(menusData));
+      const data: IMenuMapping = await JSON.parse(JSON.stringify(menusData));
       // use sequlize to create
 
       const menus = await menu.create({ ...data });
-      menus.save();
+      await menus.save();
 
       return menus;
     } catch (error) {
@@ -198,17 +198,16 @@ export class DB {
   public static insertCategories = async (
     schemaName: string,
     categoriesData: ICategoryMapping,
-  ): Promise<any> => {
-    const transaction= await sequelize.transaction();
+  ) => {
+    const transaction = await sequelize.transaction();
     try {
       const category = ICategoryMappingTable.schema(schemaName);
       //get data after posting and insert in database 
       const data: ICategoryMapping = JSON.parse(JSON.stringify(categoriesData));
       // use sequlize to create
 
-      const categories = await category.create({ ...data } , {transaction});
+      const categories = await category.create({ ...data }, { transaction });
       await transaction.commit()
-      console.log(`create category in insert categories`)
       return categories;
 
     } catch (error) {
@@ -221,17 +220,15 @@ export class DB {
   public static insertItems = async (
     schemaName: string,
     itemsData: IItemMapping,
-  ): Promise<any> => {
+  ) => {
     try {
-
-
       const item = IItemMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: ICategoryMapping = JSON.parse(JSON.stringify(itemsData));
+      const data: ICategoryMapping = await JSON.parse(JSON.stringify(itemsData));
       // use sequlize to create
 
       const items = await item.create({ ...data });
-      items.save();
+      await items.save();
 
       return items;
     } catch (error) {
@@ -242,18 +239,18 @@ export class DB {
 
   public static insertOptionSet = async (
     schemaName: string,
-    optionData: IOptionSetMapping,
-  ): Promise<any> => {
+    optionData: IOptionSetMapping
+  ) => {
     try {
       const option = IOptionSetMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: IOptionSetMapping = JSON.parse(JSON.stringify(optionData));
+      const data: IOptionSetMapping = await JSON.parse(JSON.stringify(optionData));
       // use sequlize to create
 
       const options = await option.create({ ...data });
-      options.save();
-
+      await options.save();
       return options;
+
     } catch (error) {
       console.error(error);
       return error;
@@ -263,15 +260,15 @@ export class DB {
   public static insertOptionItem = async (
     schemaName: string,
     optionData: IOptionItemMapping,
-  ): Promise<any> => {
+  ) => {
     try {
       const option = IOptionItemMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: IOptionItemMapping = JSON.parse(JSON.stringify(optionData));
+      const data: IOptionItemMapping = await JSON.parse(JSON.stringify(optionData));
       // use sequlize to create
 
       const options = await option.create({ ...data });
-      options.save();
+      await options.save();
 
       return options;
     } catch (error) {
@@ -284,15 +281,15 @@ export class DB {
   public static insertCustomer = async (
     schemaName: string,
     customerData: ICustomerMapping,
-  ): Promise<any> => {
+  ) => {
     try {
       const customer = CustomerMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: ICustomerMapping = JSON.parse(JSON.stringify(customerData));
+      const data: ICustomerMapping = await JSON.parse(JSON.stringify(customerData));
       // use sequlize to create
 
       const customers = await customer.create({ ...data });
-      customers.save();
+      await customers.save();
 
       return customers;
     } catch (error) {
@@ -305,15 +302,15 @@ export class DB {
   public static insertOrder = async (
     schemaName: string,
     orderData: IOrderMapping,
-  ): Promise<any> => {
+  ) => {
     try {
       const order = IOrderMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const data: IOrderMapping = JSON.parse(JSON.stringify(orderData));
+      const data: IOrderMapping = await JSON.parse(JSON.stringify(orderData));
       // use sequlize to create
 
       const orders = await order.create({ ...data });
-      orders.save();
+      await orders.save();
 
       return orders;
     } catch (error) {
@@ -327,12 +324,12 @@ export class DB {
     schemaName: string,
     custoemrData: ICustomerMapping,
     revelId: string
-  ): Promise<any> => {
+  ) => {
     try {
 
       const customer = CustomerMappingTable.schema(schemaName);
       //get data after post update and update in database 
-      const customerUpdates: ICategoryMapping = JSON.parse(JSON.stringify(custoemrData));
+      const customerUpdates: ICategoryMapping = await JSON.parse(JSON.stringify(custoemrData));
       // use sequlize to create
 
       const customers = await customer.update(
@@ -351,7 +348,7 @@ export class DB {
     schemaName: string,
     categoriesData: ICategoryMapping,
     foodbitId: string
-  ): Promise<any> => {
+  ) => {
     try {
 
       const category = ICategoryMappingTable.schema(schemaName);
@@ -375,13 +372,13 @@ export class DB {
     schemaName: string,
     itemsData: IItemMapping,
     foodbitId: string
-  ): Promise<any> => {
+  ) => {
     try {
 
 
       const item = IItemMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const itemUpdates: ICategoryMapping = JSON.parse(JSON.stringify(itemsData));
+      const itemUpdates: ICategoryMapping = await JSON.parse(JSON.stringify(itemsData));
       // use sequlize to create
 
       const items = await item.update(
@@ -402,11 +399,11 @@ export class DB {
     optionData: IOptionSetMapping,
     foodbitId: string
 
-  ): Promise<any> => {
+  ) => {
     try {
       const option = IOptionSetMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const optionUpdates: IOptionSetMapping = JSON.parse(JSON.stringify(optionData));
+      const optionUpdates: IOptionSetMapping = await JSON.parse(JSON.stringify(optionData));
       // use sequlize to create
 
       const options = await option.update(
@@ -428,11 +425,11 @@ export class DB {
     optionData: IOptionItemMapping,
     foodbitId: string
 
-  ): Promise<any> => {
+  ) => {
     try {
       const option = IOptionItemMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const optionUpdates: IOptionItemMapping = JSON.parse(JSON.stringify(optionData));
+      const optionUpdates: IOptionItemMapping = await JSON.parse(JSON.stringify(optionData));
       // use sequlize to create
 
       const options = await option.update(
@@ -452,7 +449,7 @@ export class DB {
   public static insertMenuSyncError = async (
     schemaName: string,
     errorDetails: IMenuSyncErrorMapping,
-  ): Promise<any> => {
+  ) => {
     try {
       const error = IMenuSyncErrorTable.schema(schemaName);
       //get data after posting and insert in database 
@@ -460,7 +457,7 @@ export class DB {
       // use sequlize to create
 
       const errors = await error.create({ ...data });
-      errors.save();
+      await errors.save();
 
       return errors;
     } catch (error) {
@@ -472,7 +469,7 @@ export class DB {
   public static insertOrderSyncError = async (
     schemaName: string,
     errorDetails: IOrderSyncErrors,
-  ): Promise<any> => {
+  ) => {
     try {
       const error = IOrderSyncErrorTable.schema(schemaName);
       //get data after posting and insert in database 
@@ -480,7 +477,7 @@ export class DB {
       // use sequlize to create
 
       const errors = await error.create({ ...data });
-      errors.save();
+      await errors.save();
 
       return errors;
     } catch (error) {
@@ -496,11 +493,11 @@ export class DB {
     data: any,
     count: number,
     foodbitId: string
-  ): Promise<any> => {
+  ) => {
     try {
       const menu = IMenuMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const menuUpdates = (JSON.stringify(data));
+      const menuUpdates = await JSON.stringify(data);
       // use sequlize to create
 
       const items = await menu.update(
@@ -521,12 +518,11 @@ export class DB {
     schemaName: string,
     data: any,
     foodbitId: string
-  ): Promise<any> => {
+  ) => {
     try {
       const category = ICategoryMappingTable.schema(schemaName);
       //get data after posting and insert in database 
-      const categoryUpdates = (JSON.stringify(data));
-      console.log(`categoryUpdates ${categoryUpdates}`)
+      const categoryUpdates = await JSON.stringify(data);
       // use sequlize to create
 
       const categories = await category.update(

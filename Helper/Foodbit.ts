@@ -31,10 +31,10 @@ export class Foodbit {
   public static createMenu = async ( accountConfig : IAccountConfig, menuData: IMenuFoodbit) => {
     try {
       const menu = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchant_id']}/menus/`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig['foodbitToken']}`,
+          token: `${accountConfig['foodbit_token']}`,
         },
         method: MethodEnum.POST,
         data : menuData
@@ -49,10 +49,10 @@ export class Foodbit {
     try {
 
       const category = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/categories`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchant_id']}/menus/categories`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig['foodbitToken']}`,
+          token: `${accountConfig['foodbit_token']}`,
         },
         method: MethodEnum.POST,
         data : categoryData
@@ -67,10 +67,10 @@ export class Foodbit {
     try {
 
       const item = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/items`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchant_id']}/menus/items`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig['foodbitToken']}`,
+          token: `${accountConfig['foodbit_token']}`,
         },
         method: MethodEnum.POST,
         data : itemData
@@ -84,11 +84,12 @@ export class Foodbit {
   public static createOptionSet =  async ( accountConfig : IAccountConfig, optionData: IOptionSetFoodbit) => {
     try {
 
+      console.log(`createOptionSetcreateOptionSetcreateOptionSetcreateOptionSet`)
       const option = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/option-sets`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchant_id']}/menus/option-sets`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig['foodbitToken']}`,
+          token: `${accountConfig['foodbit_token']}`,
         },
         method: MethodEnum.POST,
         data : optionData
@@ -104,10 +105,10 @@ export class Foodbit {
     try {
 
       const optionItem = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/option-items`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchant_id']}/menus/option-items`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig['foodbitToken']}`,
+          token: `${accountConfig['foodbit_token']}`,
         },
         method: MethodEnum.POST,
         data : optionItemData
@@ -121,10 +122,10 @@ export class Foodbit {
   public static updateCategory =  async ( accountConfig : IAccountConfig, categoryData: ICategoryFoodbit , id : string) => {
     try {
       const category = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/categories/${id}`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchant_id']}/menus/categories/${id}`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig['foodbitToken']}`,
+          token: `${accountConfig['foodbit_token']}`,
         },
         method: MethodEnum.PATCH,
         data : categoryData
@@ -138,10 +139,10 @@ export class Foodbit {
   public static updateItem =  async ( accountConfig : IAccountConfig, itemData: IItemFoodbit , id : string) => {
     try {
       const item = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/items/${id}`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchant_id']}/menus/items/${id}`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig['foodbitToken']}`,
+          token: `${accountConfig['foodbit_token']}`,
         },
         method: MethodEnum.PATCH,
         data : itemData
@@ -155,10 +156,10 @@ export class Foodbit {
   public static updateOptionSet =  async ( accountConfig : IAccountConfig, optionData: IOptionSetFoodbit , id : string) => {
     try {
       const option = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/option-sets/${id}`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchant_id']}/menus/option-sets/${id}`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig['foodbitToken']}`,
+          token: `${accountConfig['foodbit_token']}`,
         },
         method: MethodEnum.PATCH,
         data : optionData
@@ -172,10 +173,10 @@ export class Foodbit {
   public static updateOptionItem =  async ( accountConfig : IAccountConfig, optionItem: IOptionItemFoodbit , id : string) => {
     try {
       const option = await Foodbit.FoodbitSendRequest({
-        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchantId']}/menus/option-items/${id}`,
+        url: `${SystemUrl.FOODBITMENU}${accountConfig['merchant_id']}/menus/option-items/${id}`,
         headers: {
           contentType: "application/json",
-          token: `${accountConfig['foodbitToken']}`,
+          token: `${accountConfig['foodbit_token']}`,
         },
         method: MethodEnum.PATCH,
         data : optionItem

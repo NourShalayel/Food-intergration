@@ -13,17 +13,19 @@ export const IOptionItemMappingTable = sequelize.define(
         taxable: DataType.BOOLEAN,
         createdDate: DataType.STRING,
         updatedDate: DataType.STRING,
+        barcode: DataType.STRING
     },
     { createdAt: false, updatedAt: false }
 );
 
 export interface IOptionItemMapping {
-    revelId?: string;
-    foodbitId?: string;
-    nameEn?: string;
-    nameAr?: string;
-    price: number;
-    taxable?: boolean;
-    createdDate?: string;
-    updatedDate?: string;
+    revelId?: string
+    foodbitId?: string
+    nameEn?: string
+    nameAr?: string
+    price: number
+    taxable?: boolean
+    createdDate?: string
+    updatedDate?: string
+    barcode?: string
 }

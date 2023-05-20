@@ -5,8 +5,8 @@ export class IOrderRevel {
     items: IItemOrderRevel[]
     orderInfo: IOrderInfo
     paymentInfo?: IPaymentInfo
-    discounts?: IDiscount
-    serviceFees?: IServiceFees
+    discounts?: IDiscount[]
+   // serviceFees?: IServiceFees
 }
 
 
@@ -20,7 +20,7 @@ export class IItemOrderRevel {
 export class IModifierItems {
     barcode: string
     qty: number
-    free_mod_price: number
+    modifier_price: number
 }
 
 export class IOrderInfo {

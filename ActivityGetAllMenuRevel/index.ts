@@ -29,12 +29,12 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
 
     const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
     const locationsMapping: ILocationMapping[] = await DB.getLocations(
-        accountConfig.SchemaName
+        accountConfig.schema_name
     )
     const customMenusMapping: ICustomMenuMapping[] = await DB.getCustomMenu(
-        accountConfig.SchemaName
+        accountConfig.schema_name
     );
-    const baseURL: string = `https://${accountConfig.RevelAccount}.revelup.com/`;
+    const baseURL: string = `https://${accountConfig.revel_account}.revelup.com/`;
     let menus: Menu[] = [];
 
     //#region  get data from revel based on customMenu name and establishment
@@ -45,7 +45,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${customMenuMapping.LocationId}&name=${customMenuMapping.MenuName}`,
                     headers: {
                         contentType: "application/json",
-                        token: `Bearer ${accountConfig.RevelAuth}`,
+                        token: `Bearer ${accountConfig.revel_auth}`,
                     },
                     method: MethodEnum.GET,
                 });

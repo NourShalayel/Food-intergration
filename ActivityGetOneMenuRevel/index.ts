@@ -30,10 +30,10 @@ async function activityFunction(context) {
 
     const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
     const locationsMapping: ILocationMapping[] = await DB.getLocations(
-        accountConfig.SchemaName
+        accountConfig.schema_name
     )
 
-    const baseURL: string = `https://${accountConfig.RevelAccount}.revelup.com/`;
+    const baseURL: string = `https://${accountConfig.revel_account}.revelup.com/`;
     let menus: Menu[] = [];
 
     try {
@@ -41,7 +41,7 @@ async function activityFunction(context) {
             url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${establishment}&name=${name}`,
             headers: {
                 contentType: "application/json",
-                token: `Bearer ${accountConfig.RevelAuth}`,
+                token: `Bearer ${accountConfig.revel_auth}`,
             },
             method: MethodEnum.GET,
         });

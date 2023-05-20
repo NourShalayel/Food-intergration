@@ -20,18 +20,17 @@ import { splitNameLanguag } from "../Interface/Revel/IMenu.interface";
 import { IMenuMapping } from "../Interface/SettingMapping/IMenuMapping.interface";
 import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface";
 
-const activityFunction: AzureFunction = async function (context: Context): Promise<any> {
+const activityFunction: AzureFunction = async function (context: Context) {
     const accountConfig = context.bindingData.data.accountConfig
-    const locationsMapping = context.bindingData.data.locationsMapping
-    console.log(`JSON.stringify(accountConfi ${JSON.stringify(accountConfig)}`)
-
-    console.log(`accountConfig['schemaName'] ${accountConfig['schemaName']}`)
-    const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig['schemaName'])
+    const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig['schema_name'])
     const menu = context.bindingData.data.menu
     let menuFoodbitId
     let menuName
     //#region create menu if not exsit or update 
 
+    console.log(`accountConfigaccountConfigaccountConfig ${JSON.stringify(accountConfig)}`)
+
+    
     try {
         const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
         // get name from revel and spilt by use function to ar / en 
@@ -57,10 +56,9 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 foodbitStoreId: menu.foodbitStoreId,
             };
             menuFoodbitId = foodbitMenuResponse.id
-            console.log(`menuFoodbitId ${menuFoodbitId}`)
             menuName = menu.menuName
             new Promise((resolve, rejects) => {
-                DB.insertMenus(accountConfig['schemaName'], menuData)
+                DB.insertMenus(accountConfig['schema_name'], menuData)
                     .then((value) => {
                         resolve(value)
                     }).catch((err) => {
@@ -91,7 +89,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
             type: EntityType.MENU
         }
-        await DB.insertMenuSyncError(accountConfig['schemaName'], errorDetails)
+        await DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
     }
 
     //#endregion

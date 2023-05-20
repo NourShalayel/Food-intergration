@@ -21,7 +21,7 @@ import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.i
 import { IItemMapping } from "../Interface/SettingMapping/IItemMapping.interface"
 import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface"
 
-const activityFunction: AzureFunction = async function (context: Context): Promise<any> {
+const activityFunction: AzureFunction = async function (context: Context) {
 
     const accountConfig = context.bindingData.data.accountConfig
     const item = context.bindingData.data.item
@@ -31,12 +31,11 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
     console.log("********************* activity 2 *********************")
 
 
-    const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig['schemaName'])
-    const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schemaName'])
+    const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig['schema_name'])
+    const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schema_name'])
     let itemsIds: ids[] = [];
 
     const categoryMapping: ICategoryMapping = await categoriesMapping.find(cateMapping => {
-        console.log(` item.id_category.toString() ${item.id_category.toString()}`)
         if (cateMapping.revelId == item.id_category.toString()) {
             return true; // return true to include the categoryMapping in the result
         }
@@ -83,7 +82,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 barcode: item.barcode,
                 createdDate: foodbitItemResponse.createdDate,
             };
-            const itemsDB = DB.insertItems(accountConfig['schemaName'], itemData)
+            const itemsDB = DB.insertItems(accountConfig['schema_name'], itemData)
 
             // add item in list and add this list in category table ===> update category table 
             const itemId: ids = {
@@ -91,8 +90,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
             }
 
             itemsIds = [...itemsIds, itemId];
-            // await DB.updateItemIds(accountConfig['schemaName'], itemsIds, categoryId)
-            return itemsDB
+            // await DB.updateItemIds(accountConfig['schema_name'], itemsIds, categoryId)
         } else {
             //update
             const itemFoodbit: IItemFoodbit = {
@@ -123,7 +121,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 updatedDate: foodbitItemResponse.lastUpdated,
             };
 
-            await DB.updateItems(accountConfig['schemaName'], itemData, foodbitItemResponse.id)
+            await DB.updateItems(accountConfig['schema_name'], itemData, foodbitItemResponse.id)
         }
     } catch (error) {
         console.log(`Error in Flow Product ${error}`)
@@ -135,12 +133,12 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
             type: EntityType.MENU_ITEM
         }
-        await DB.insertMenuSyncError(accountConfig['schemaName'], errorDetails)
+        await DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
     }
 
     return {
         "modifier_classes": item.modifier_classes,
-        " itemId": item.id
+        "itemId": item.id
     }
 };
 

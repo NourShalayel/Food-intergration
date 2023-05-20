@@ -10,8 +10,6 @@
  */
 
 import * as df from "durable-functions"
-import { forEach } from "typescript-collections/dist/lib/arrays";
-
 
 function* orchCallback(context) {
 
@@ -19,13 +17,6 @@ function* orchCallback(context) {
 
     const account: string | undefined = context.df.input;
 
-    if (!account) {
-        context.res = {
-            status: 400,
-            body: "Missing RevelAccount header in the request",
-        };
-        return;
-    }
     const getConfig = {};
     getConfig['account'] = account
     const configData = yield context.df.callActivity('ActivityGetConfig', getConfig);
@@ -35,10 +26,8 @@ function* orchCallback(context) {
 
     //#endregion
     // let menus: Menu[] = [];
-
     let accountName = {};
     accountName['account'] = account
-
     let createMenu = {};
     createMenu['account'] = account
     createMenu['accountConfig'] = accountConfig
@@ -53,9 +42,7 @@ function* orchCallback(context) {
         // console.log(`menus ${JSON.stringify(menus)}`)
     } else {
         const AllMenuRevel = yield context.df.callActivity('ActivityGetAllMenuRevel', accountName);
-
         // all menu 
-
         for (const menu of AllMenuRevel) {
             createMenu['menu'] = menu
             const categories = yield context.df.callActivity('ActivityCreateManyMenu', createMenu);
@@ -64,18 +51,14 @@ function* orchCallback(context) {
             createMenu['items'] = items
             for (const item of items) {
                 createMenu['item'] = item
-                yield context.df.callActivity('ActivityCreateItem', createMenu)
+                const modifier_classes = yield context.df.callActivity('ActivityCreateItem', createMenu)
+                createMenu['modifier_classes'] = modifier_classes
+                const modifiers = yield context.df.callActivity('ActivityCreateOptionSet', createMenu)
+                createMenu['modifiers'] = modifiers
+                yield context.df.callActivity('ActivityCreateOptionItem', createMenu)
             }
-            yield context.df.callActivity('ActivityCreateOptionSet', createMenu)
-            yield context.df.callActivity('ActivityCreateOptionItem', createMenu)
         }
     }
-
-
-
-    // yield context.df.callActivity('ActivityCreateItem', createMenu)
-
-
 
 }
 

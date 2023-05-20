@@ -18,19 +18,14 @@ import { Utils } from "../Helper/Utils"
 import { ICategoryFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface"
 import { Item, ids, splitNameLanguag } from "../Interface/Revel/IMenu.interface"
 import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.interface"
-import { IMenuMapping } from "../Interface/SettingMapping/IMenuMapping.interface"
 import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface"
-import { resolve } from "path"
-import { rejects } from "assert"
 
-const activityFunction: AzureFunction = async function (context: Context): Promise<any> {
+const activityFunction: AzureFunction = async function (context: Context) {
 
     const accountConfig = context.bindingData.data.accountConfig
     const categories = context.bindingData.data.categories.categories
     const menuId = context.bindingData.data.categories.menuId
     //#region create category if not exist or update 
-
-    console.log(`menuIdmenuIdmenuId ${JSON.stringify(menuId)}`)
 
     console.log("********************* I'm in create Category   *********************")
     let categoryIds: ids[] = [];
@@ -38,9 +33,9 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
 
     let count: number = 0;
 
-    const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schemaName'])
+    const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schema_name'])
 
-    await Promise.all(categories.map(async category => {
+    categories.forEach(async category => {
         const categoryMapping = categoriesMapping.find((catMapping => catMapping.revelId == category.id.toString()))
         let menuIds: ids[] = []
         try {
@@ -53,7 +48,6 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     id: menuId
                 }
                 const FindMenus = menuIds.find(menu => menu.id === menuId);
-                console.log(`FindMenus ${FindMenus}`)
                 if (!FindMenus) {
                     menuIds.push(menu_id);
                 }
@@ -81,7 +75,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 // add one to count when add new category to save this in data base 
                 count++;
                 const categoiesDB = new Promise((resolve, rejects) => {
-                    DB.insertCategories(accountConfig['schemaName'], categoryData)
+                    DB.insertCategories(accountConfig['schema_name'], categoryData)
                         .then((value) => {
                             resolve(value)
                         }).catch((err) => {
@@ -93,8 +87,6 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 const categoryId: ids = {
                     id: categoryData.foodbitId.toString()
                 }
-
-                console.log(`create all category done `)
 
                 categoryIds = [...categoryIds, categoryId];
                 //  DB.updateCategoryIds(accountConfig['schemaName'], categoryIds, count, menuId)
@@ -117,7 +109,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     },
                     menus: menuIds,
                     isHidden: false,
-                    merchantId: accountConfig['merchantId']
+                    merchantId: accountConfig['merchant_id']
                 }
                 const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.updateCategory(accountConfig, categoryFodbit, categoryMapping['foodbitId'])
 
@@ -127,7 +119,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     menuId: JSON.stringify(menuIds).toString(),
                     updatedDate: foodbitCategoryResponse.lastUpdated
                 };
-                DB.updateCategories(accountConfig['schemaName'], categoryUpdates, foodbitCategoryResponse.id)
+                DB.updateCategories(accountConfig['schema_name'], categoryUpdates, foodbitCategoryResponse.id)
 
             }
 
@@ -140,16 +132,16 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                 type: EntityType.MENU_CATEGORY
             }
-            DB.insertMenuSyncError(accountConfig['schemaName'], errorDetails)
+            DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
         }
-    }))
+    })
 
     let productsInAllCategory: Item[] = [];
 
-    categories.map((category) => {
-      productsInAllCategory.push(...category.products);
+    await categories.map((category) => {
+        productsInAllCategory.push(...category.products);
     });
-    
+
     return productsInAllCategory
 
     //#endregion

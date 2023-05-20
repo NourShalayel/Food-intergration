@@ -29,6 +29,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
     const accountConfig = context.bindingData.data.accountConfig
     const locationsMapping = context.bindingData.data.locationsMapping
 
+    console.log(`accountConfigaccountConfigaccountConfig ${JSON.stringify(accountConfig)}`)
     const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.schemaName)
     const menus = context.bindingData.data.menu
 
@@ -67,7 +68,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                     createdDate: foodbitMenuResponse.createdDate,
                     foodbitStoreId: JSON.stringify(locations).toString(),
                 };
-                const menusDB = DB.insertMenus(accountConfig['schemaName'], menuData)
+                const menusDB = DB.insertMenus(accountConfig['schema_name'], menuData)
 
                 return menusDB;
             }
@@ -82,7 +83,7 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
                 syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                 type: EntityType.MENU
             }
-            await DB.insertMenuSyncError(accountConfig['schemaName'], errorDetails)
+            await DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
         }
     })
     )

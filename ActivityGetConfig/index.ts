@@ -20,10 +20,10 @@ async function activityFunction(context) {
     const account = context.bindingData.account
     const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
     const customMenusMapping: ICustomMenuMapping[] = await DB.getCustomMenu(
-        accountConfig.SchemaName
+        accountConfig.schema_name
     );
     const locationsMapping: ILocationMapping[] = await DB.getLocations(
-        accountConfig.SchemaName
+        accountConfig.schema_name
     )
 
     const data = {};

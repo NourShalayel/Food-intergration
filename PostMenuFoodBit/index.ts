@@ -28,7 +28,7 @@ const PostMenuFoodBit: AzureFunction = async function (
   try {
 
 
-    //#region  get revelAccount from header to get schemaName from database
+    //#region  get revelAccount from header to get schema_name from database
     const account: string | undefined = req.headers.revelaccount;
     if (!account) {
       context.res = {
@@ -42,18 +42,18 @@ const PostMenuFoodBit: AzureFunction = async function (
     //#region DataBase Connection
     const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
     const customMenusMapping: ICustomMenuMapping[] = await DB.getCustomMenu(
-      accountConfig.SchemaName
+      accountConfig.schema_name
     );
     const locationsMapping: ILocationMapping[] = await DB.getLocations(
-      accountConfig.SchemaName
+      accountConfig.schema_name
     )
     console.log(locationsMapping)
     //#endregion
 
-    const baseURL: string = `https://${accountConfig.RevelAccount}.revelup.com/`;
+    const baseURL: string = `https://${accountConfig.revel_auth}.revelup.com/`;
 
     let menus: Menu[] = [];
-    if (accountConfig.MenuStatus == "one") {
+    if (accountConfig.menu_status == "one") {
       //#region  get data from revel based on specific name and establishment
       const establishment = 12;
       const name = "Menu";
@@ -62,7 +62,7 @@ const PostMenuFoodBit: AzureFunction = async function (
           url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${establishment}&name=${name}`,
           headers: {
             contentType: "application/json",
-            token: `Bearer ${accountConfig.RevelAuth}`,
+            token: `Bearer ${accountConfig.revel_auth}`,
           },
           method: MethodEnum.GET,
         });
@@ -101,7 +101,7 @@ const PostMenuFoodBit: AzureFunction = async function (
       console.log("======================================================================================================")
       console.log("===========================I'm in flow menu ============================")
 
-      const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
+      const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.schema_name)
       // if menu not exist ==> create menu with data(name , )
 
       await Promise.all(menus.map(async (menu) => {
@@ -121,7 +121,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                 ar: name[0].ar,
               },
               stores: locations,
-              merchantId: accountConfig.MerchantId,
+              merchantId: accountConfig.merchant_id,
               entityType: EntityType.MENU,
               isHidden: false
             };
@@ -135,7 +135,7 @@ const PostMenuFoodBit: AzureFunction = async function (
               createdDate: foodbitMenuResponse.createdDate,
               foodbitStoreId: JSON.stringify(locations).toString(),
             };
-            const menusDB = DB.insertMenus(accountConfig.SchemaName, menuData)
+            const menusDB = DB.insertMenus(accountConfig.schema_name, menuData)
 
             return menusDB;
           }
@@ -150,7 +150,7 @@ const PostMenuFoodBit: AzureFunction = async function (
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
             type: EntityType.MENU
           }
-          await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
+          await DB.insertMenuSyncError(accountConfig.schema_name, errorDetails)
         }
       })
       )
@@ -158,7 +158,7 @@ const PostMenuFoodBit: AzureFunction = async function (
 
       //#endregion
 
-    } else if (accountConfig.MenuStatus == "many") {
+    } else if (accountConfig.menu_status == "many") {
 
       //#region  get data from revel based on customMenu name and establishment
       await Promise.all(
@@ -168,7 +168,7 @@ const PostMenuFoodBit: AzureFunction = async function (
               url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${customMenuMapping.LocationId}&name=${customMenuMapping.MenuName}`,
               headers: {
                 contentType: "application/json",
-                token: `Bearer ${accountConfig.RevelAuth}`,
+                token: `Bearer ${accountConfig.revel_auth}`,
               },
               method: MethodEnum.GET,
             });
@@ -208,7 +208,7 @@ const PostMenuFoodBit: AzureFunction = async function (
       // get all menu from database 
 
 
-      const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
+      const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.schema_name)
       // if menu not exist ==> create menu with data(name , )
 
       await Promise.all(menus.map(async (menu) => {
@@ -224,7 +224,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                 ar: name[0].ar,
               },
               stores: [{ id: menu.foodbitStoreId }],
-              merchantId: accountConfig.MerchantId,
+              merchantId: accountConfig.merchant_id,
               entityType: EntityType.MENU,
               isHidden: false
             };
@@ -237,7 +237,7 @@ const PostMenuFoodBit: AzureFunction = async function (
               createdDate: foodbitMenuResponse.createdDate,
               foodbitStoreId: menu.foodbitStoreId,
             };
-            const menusDB = DB.insertMenus(accountConfig.SchemaName, menuData)
+            const menusDB = DB.insertMenus(accountConfig.schema_name, menuData)
 
             return menusDB;
           }
@@ -252,7 +252,7 @@ const PostMenuFoodBit: AzureFunction = async function (
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
             type: EntityType.MENU
           }
-          await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
+          await DB.insertMenuSyncError(accountConfig.schema_name, errorDetails)
         }
       }));
       //#endregion
@@ -264,9 +264,9 @@ const PostMenuFoodBit: AzureFunction = async function (
     console.log("===========================I'm in flow category============================")
     await Promise.all(menus.map(async (menu) => {
       menu.categories.map(async (category) => {
-        const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.SchemaName)
+        const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.schema_name)
         try {
-          const checkMenusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.SchemaName)
+          const checkMenusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.schema_name)
 
           const categoryMapping = categoriesMapping.find((catMapping => catMapping.revelId == category.id.toString()))
           // //get menu id from db 
@@ -292,7 +292,7 @@ const PostMenuFoodBit: AzureFunction = async function (
               menus: [{ id: menuId }],
               entityType: EntityType.MENU_CATEGORY,
               isHidden: false,
-              merchantId: accountConfig.MerchantId
+              merchantId: accountConfig.merchant_id
             }
             const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.createCategory(accountConfig, categoryFodbit)
 
@@ -305,7 +305,7 @@ const PostMenuFoodBit: AzureFunction = async function (
               createdDate: foodbitCategoryResponse.createdDate
             };
 
-            const categoiesDB = DB.insertCategories(accountConfig.SchemaName, categoryData)
+            const categoiesDB = DB.insertCategories(accountConfig.schema_name, categoryData)
             return categoiesDB
           } else {
             const categoryFodbit: ICategoryFoodbit = {
@@ -315,7 +315,7 @@ const PostMenuFoodBit: AzureFunction = async function (
               },
               menus: [{ id: menuId }],
               isHidden: false,
-              merchantId: accountConfig.MerchantId
+              merchantId: accountConfig.merchant_id
             }
             const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.updateCategory(accountConfig, categoryFodbit, categoryMapping.foodbitId)
 
@@ -325,7 +325,7 @@ const PostMenuFoodBit: AzureFunction = async function (
               menuId: menuId,
               updatedDate: foodbitCategoryResponse.lastUpdated
             };
-            await DB.updateCategories(accountConfig.SchemaName, categoryUpdates, foodbitCategoryResponse.id)
+            await DB.updateCategories(accountConfig.schema_name, categoryUpdates, foodbitCategoryResponse.id)
 
           }
 
@@ -338,7 +338,7 @@ const PostMenuFoodBit: AzureFunction = async function (
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
             type: EntityType.MENU_CATEGORY
           }
-          await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
+          await DB.insertMenuSyncError(accountConfig.schema_name, errorDetails)
         }
       })
     }))
@@ -350,8 +350,8 @@ const PostMenuFoodBit: AzureFunction = async function (
     console.log("======================================================================================================")
     console.log("===========================I'm in flow product============================")
 
-    const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.SchemaName)
-    const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.SchemaName)
+    const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.schema_name)
+    const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig.schema_name)
     await Promise.all(menus.map(async (menu) => {
       menu.categories.map(async (category) => {
         const categoryMapping: ICategoryMapping = await categoriesMapping.find(cateMapping => {
@@ -384,7 +384,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                 },
                 entityType: EntityType.MENU_ITEM,
                 isHidden: false,
-                merchantId: accountConfig.MerchantId,
+                merchantId: accountConfig.merchant_id,
                 profilePic: item.image,
                 categoryId: categoryId,
                 // total :  ,
@@ -404,7 +404,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                 barcode: item.barcode,
                 createdDate: foodbitItemResponse.createdDate,
               };
-              const itemsDB = DB.insertItems(accountConfig.SchemaName, itemData)
+              const itemsDB = DB.insertItems(accountConfig.schema_name, itemData)
               return itemsDB
             } else {
               //update
@@ -418,7 +418,7 @@ const PostMenuFoodBit: AzureFunction = async function (
 
                   ar: description ? description[0].ar : null,
                 },
-                merchantId: accountConfig.MerchantId,
+                merchantId: accountConfig.merchant_id,
                 profilePic: item.image,
                 categoryId: categoryId,
                 // total :  ,
@@ -436,7 +436,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                 updatedDate: foodbitItemResponse.lastUpdated,
               };
 
-              await DB.updateItems(accountConfig.SchemaName, itemData, foodbitItemResponse.id)
+              await DB.updateItems(accountConfig.schema_name, itemData, foodbitItemResponse.id)
             }
           } catch (error) {
             console.log(`Error in Flow Product ${error}`)
@@ -448,7 +448,7 @@ const PostMenuFoodBit: AzureFunction = async function (
               syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
               type: EntityType.MENU_ITEM
             }
-            await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
+            await DB.insertMenuSyncError(accountConfig.schema_name, errorDetails)
           }
         })
       })
@@ -460,7 +460,7 @@ const PostMenuFoodBit: AzureFunction = async function (
     console.log("======================================================================================================")
     console.log("===========================I'm in flow optionSet/modifier class============================")
 
-    const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.SchemaName)
+    const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.schema_name)
     await Promise.all(
       menus.map(async (menu) => {
         menu.categories.map((category) => {
@@ -470,7 +470,7 @@ const PostMenuFoodBit: AzureFunction = async function (
               try {
                 const optionSetMapping: IOptionSetMapping = optionSetsMapping.find(optionSet => optionSet.revelId == mod_class.id.toString())
 
-                const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.SchemaName)
+                const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.schema_name)
                 // //get menu id from db 
                 const itemMapping: IItemMapping = await itemsMapping.find(itemMap => {
                   if (itemMap.revelId == item.id.toString()) {
@@ -488,7 +488,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                       en: name[0].en,
                       ar: name[0].ar,
                     },
-                    merchantId: accountConfig.MerchantId,
+                    merchantId: accountConfig.merchant_id,
                     menuItems: [{ id: itemId }],
                     maximumNumberOfSelections: mod_class.maximum_amount,
                     minimumNumberOfSelections: mod_class.minimum_amount,
@@ -507,7 +507,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                     createdDate: foodbitOptionResponse.createdDate,
                     barcode : mod_class.barcode.toString()
                   };
-                  DB.insertOptionSet(accountConfig.SchemaName, optionSetData)
+                  // DB.insertOptionSet(accountConfig.schema_name, optionSetData)
                 } else {
                   //update
 
@@ -517,7 +517,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                       en: name[0].en,
                       ar: name[0].ar,
                     },
-                    merchantId: accountConfig.MerchantId,
+                    merchantId: accountConfig.merchant_id,
                     menuItems: [{ id: itemId }],
                     maximumNumberOfSelections: mod_class.maximum_amount,
                     minimumNumberOfSelections: mod_class.minimum_amount,
@@ -534,7 +534,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                     updatedDate: foodbitOptionResponse.lastUpdated,
                   };
 
-                  await DB.updateOptionSet(accountConfig.SchemaName, optionSetData, foodbitOptionResponse.id)
+                  await DB.updateOptionSet(accountConfig.schema_name, optionSetData, foodbitOptionResponse.id)
                 }
               } catch (error) {
                 console.log(`Error in Flow OptionSet ${error}`)
@@ -547,7 +547,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                   syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                   type: EntityType.MENU_OPTIONS
                 }
-                await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
+                await DB.insertMenuSyncError(accountConfig.schema_name, errorDetails)
               }
 
 
@@ -561,7 +561,7 @@ const PostMenuFoodBit: AzureFunction = async function (
     console.log("======================================================================================================")
     console.log("===========================I'm in flow optionItem/modifier ============================")
 
-    const optionItemsMapping: IOptionItemMapping[] = await DB.getOptionItem(accountConfig.SchemaName)
+    const optionItemsMapping: IOptionItemMapping[] = await DB.getOptionItem(accountConfig.schema_name)
     await Promise.all(
       menus.map(async (menu) => {
         menu.categories.map((category) => {
@@ -573,7 +573,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                   const optionItemMapping: IOptionItemMapping = optionItemsMapping.find(optionItem => optionItem.revelId == modifier.id.toString())
 
                   // get optionSet is to pass this id in option item 
-                  const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.SchemaName)
+                  const optionSetsMapping: IOptionSetMapping[] = await DB.getOptionSet(accountConfig.schema_name)
 
                   // //get menu id from db 
                   const optionMapping: IOptionSetMapping = await optionSetsMapping.find(option => {
@@ -599,7 +599,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                         en: name[0].en,
                         ar: name[0].ar,
                       },
-                      merchantId: accountConfig.MerchantId,
+                      merchantId: accountConfig.merchant_id,
                       isHidden: modifier.active,
                       entityType: EntityType.MENU_OPTION_ITEM,
                       price: modifier.price,
@@ -616,7 +616,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                       createdDate: foodbitOptionItemResponse[0].createdDate,
                       price: foodbitOptionItemResponse[0].price,
                     };
-                    DB.insertOptionItem(accountConfig.SchemaName, optionItemData)
+                    DB.insertOptionItem(accountConfig.schema_name, optionItemData)
 
 
                   } else {
@@ -627,7 +627,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                         en: name[0].en,
                         ar: name[0].ar,
                       },
-                      merchantId: accountConfig.MerchantId,
+                      merchantId: accountConfig.merchant_id,
                       isHidden: modifier.active,
                       price: modifier.price,
                       optionSets: [{ id: optionSetId }],
@@ -639,7 +639,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                       updatedDate: foodbitOptionItemResponse.lastUpdated,
                       price: foodbitOptionItemResponse.price,
                     };
-                    await DB.updateOptionItem(accountConfig.SchemaName, optionItemData, foodbitOptionItemResponse.id)
+                    await DB.updateOptionItem(accountConfig.schema_name, optionItemData, foodbitOptionItemResponse.id)
                   }
 
                 } catch (error) {
@@ -653,7 +653,7 @@ const PostMenuFoodBit: AzureFunction = async function (
                     syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
                     type: EntityType.MENU_OPTION_ITEM
                   }
-                  await DB.insertMenuSyncError(accountConfig.SchemaName, errorDetails)
+                  await DB.insertMenuSyncError(accountConfig.schema_name, errorDetails)
                 }
 
               })
