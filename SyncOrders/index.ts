@@ -70,7 +70,7 @@ const SyncOrders: AzureFunction = async function (
                         const optionItem: IOptionItemMapping = optionsItem.find((option) => option.foodbitId == op.id)
                         const modifier: IModifierItems = {
                             barcode: optionItem.barcode,
-                            qty: 1 * item.quantity,
+                            qty: 1 ,
                             modifier_price: op.price
                         }
                         totalModifierPrice += op.price
@@ -85,6 +85,7 @@ const SyncOrders: AzureFunction = async function (
                     quantity: item.quantity,
                     barcode: itemMapping.barcode,
                     price: item.price,
+                    special_request: item.notes,
                     modifieritems: modifiers
                 }
                 itemsRevel.push(itemRevel)
@@ -105,7 +106,6 @@ const SyncOrders: AzureFunction = async function (
         const customerMapping = customersMapping.find(customer => customer.foodbitId == data.customerId)
         //check 
         try {
-
             if (customerMapping === undefined || customerMapping === null) {
                 // create 
                 const name: splitNameSpace[] = Utils.splitSpaces(data.customer.name)
@@ -239,7 +239,7 @@ const SyncOrders: AzureFunction = async function (
             data: OrderRevel
         });
 
-        //insert in db
+        // insert in db
         const orderData: IOrderMapping = {
             revelId: orderRevelResponse.orderId,
             foodbitId: data.id,
@@ -254,12 +254,13 @@ const SyncOrders: AzureFunction = async function (
 
         context.res = {
             status: 200,
-            body: JSON.stringify(OrderRevel),
+            body: JSON.stringify(orderRevelResponse),
             headers: {
                 "Content-Type": "application/json"
             }
         };
         //#endregion
+  
     } catch (error) {
         console.log(error)
     }

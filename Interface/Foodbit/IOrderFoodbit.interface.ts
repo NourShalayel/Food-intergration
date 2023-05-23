@@ -47,6 +47,7 @@ export interface items {
     optionSets: optionSets[]
     createdDate: string
     id: string
+    notes: string
 }
 
 export interface optionSets {

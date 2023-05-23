@@ -14,6 +14,7 @@ export class IItemOrderRevel {
     quantity: number
     barcode: string
     price: number
+    special_request: string
     modifieritems: IModifierItems[]
 }
 
