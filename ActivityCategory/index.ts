@@ -22,28 +22,38 @@ import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncErro
 
 const activityFunction: AzureFunction = async function (context: Context) {
 
+
+    // get data from orch 
     const accountConfig = context.bindingData.data.accountConfig
     const categories = context.bindingData.data.categories.categories
     const menuId = context.bindingData.data.categories.menuId
+
     //#region create category if not exist or update 
-
     console.log("********************* I'm in create Category   *********************")
+    //intialize categoryIds  to add category id in array and update this col in menu table  and update vategoryCount 
     let categoryIds: ids[] = [];
-
-
     let count: number = 0;
 
+    //get category from db to check if in db ====> update / else ===> craete 
     const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schema_name'])
 
+    // loop in array Catgory 
     categories.forEach(async category => {
-        const categoryMapping = categoriesMapping.find((catMapping => catMapping.revelId == category.id.toString()))
-        let menuIds: ids[] = []
         try {
+
+            // get object category from db  based on category coming from revel  
+            const categoryMapping = categoriesMapping.find((catMapping => catMapping.revelId == category.id.toString()))
+
+            // create array to make categoy follow many menu 
+            let menuIds: ids[] = []
+
             // get name from revel and spilt by use function to ar / en 
             const name: splitNameLanguag[] = Utils.splitNameByLanguage(category.name)
 
+            // check if categoryMapping found ===> craete / else update 
             if (categoryMapping === undefined || categoryMapping === null) {
                 // create
+                //preaper array menu 
                 const menu_id: ids = {
                     id: menuId
                 }
@@ -51,6 +61,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 if (!FindMenus) {
                     menuIds.push(menu_id);
                 }
+
+                // payload to post foodbit and create 
                 const categoryFodbit: ICategoryFoodbit = {
                     name: {
                         en: name[0].en,
@@ -64,6 +76,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.createCategory(accountConfig, categoryFodbit)
 
 
+                // after create in foodbit , use response and start preaper payload to insert in db 
                 const categoryData: ICategoryMapping = {
                     revelId: category.id.toString(),
                     foodbitId: foodbitCategoryResponse.id,
@@ -72,6 +85,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                     menuId: JSON.stringify(menuIds).toString(),
                     createdDate: foodbitCategoryResponse.createdDate
                 };
+
                 // add one to count when add new category to save this in data base 
                 count++;
                 const categoiesDB = new Promise((resolve, rejects) => {
@@ -82,17 +96,16 @@ const activityFunction: AzureFunction = async function (context: Context) {
                             rejects(err)
                         })
                 })
-
                 // add category in list and add this list in menus table ===> update menus table 
                 const categoryId: ids = {
                     id: categoryData.foodbitId.toString()
                 }
-
                 categoryIds = [...categoryIds, categoryId];
                 //  DB.updateCategoryIds(accountConfig['schemaName'], categoryIds, count, menuId)
-
-                return categoiesDB
             } else {
+
+                // upadte 
+                //get menu array to add if found new menu 
                 menuIds = JSON.parse(categoryMapping.menuId)
                 const menu_id: ids = {
                     id: menuId
@@ -102,6 +115,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                     menuIds.push(menu_id);
                 }
 
+                // payload to update category in foodbit 
                 const categoryFodbit: ICategoryFoodbit = {
                     name: {
                         en: name[0].en,
@@ -113,6 +127,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 }
                 const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.updateCategory(accountConfig, categoryFodbit, categoryMapping['foodbitId'])
 
+                // after update in foodbit ====> update in db 
                 const categoryUpdates: ICategoryMapping = {
                     nameEn: foodbitCategoryResponse.name.en || "",
                     nameAr: foodbitCategoryResponse.name.ar || "",
@@ -136,6 +151,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
         }
     })
 
+
+    // add all item in all category in array and return this array 
     let productsInAllCategory: Item[] = [];
 
     await categories.map((category) => {

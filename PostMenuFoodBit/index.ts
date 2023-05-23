@@ -47,7 +47,6 @@ const PostMenuFoodBit: AzureFunction = async function (
     const locationsMapping: ILocationMapping[] = await DB.getLocations(
       accountConfig.schema_name
     )
-    console.log(locationsMapping)
     //#endregion
 
     const baseURL: string = `https://${accountConfig.revel_auth}.revelup.com/`;
@@ -79,7 +78,6 @@ const PostMenuFoodBit: AzureFunction = async function (
           } else return null
         });
 
-        console.log(foodbitStoreIds)
         const menu: Menu = {
           revelLocationId: establishment,
           foodbitStoreId: foodbitStoreIds.foodbitId || null,

@@ -33,12 +33,17 @@ async function activityFunction(context) {
         accountConfig.schema_name
     )
 
+    const customMenusMapping: ICustomMenuMapping[] = await DB.getCustomMenu(
+        accountConfig.schema_name
+    );
+    
+    const oneMenuDb = customMenusMapping[0]
     const baseURL: string = `https://${accountConfig.revel_account}.revelup.com/`;
     let menus: Menu[] = [];
 
     try {
         const revelResponse = await Revel.RevelSendRequest({
-            url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${establishment}&name=${name}`,
+            url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${oneMenuDb.LocationId}&name=${oneMenuDb.MenuName}`,
             headers: {
                 contentType: "application/json",
                 token: `Bearer ${accountConfig.revel_auth}`,
@@ -47,11 +52,6 @@ async function activityFunction(context) {
         });
 
         const customMenu: CustomMenu = plainToClass(CustomMenu, revelResponse.data);
-        // await validate(menuData, {
-        //   whitelist: true,
-        //   forbidNonWhitelisted: true
-        // })
-
         const foodbitStoreIds: ILocationMapping = await locationsMapping.find(location => {
             if (location.revelId === establishment) {
                 return location
@@ -65,9 +65,8 @@ async function activityFunction(context) {
             categories: customMenu.categories,
         };
 
-        menus = [...menus, menu];
         return {
-            'data': menus,
+            'data': menu,
         }
 
 

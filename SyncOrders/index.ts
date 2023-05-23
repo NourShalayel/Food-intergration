@@ -59,45 +59,40 @@ const SyncOrders: AzureFunction = async function (
         const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.schema_name)
         const optionsItem: IOptionItemMapping[] = await DB.getOptionItem(accountConfig.schema_name)
         const itemsRevel: IItemOrderRevel[] = []
-        const modifiers: IModifierItems[] = []
         let discount = 0
         await Promise.all(data.items.map((item) => {
             let totalModifierPrice = 0
             const itemMapping: IItemMapping = itemsMapping.find((itemMap => itemMap.foodbitId == item.id))
             if (itemMapping != null || itemMapping != undefined) {
-                data.items.forEach((item) => {
-                    item.optionSets.forEach((optionSet) => {
-                        optionSet.items.forEach((op) => {
-                            const optionItem: IOptionItemMapping = optionsItem.find((option) => option.foodbitId == op.id)
-                            const modifier: IModifierItems = {
-                                barcode: optionItem.barcode,
-                                qty: 1 * item.quantity,
-                                modifier_price: op.price
-                            }
-                            totalModifierPrice += op.price
-                            modifiers.push(modifier)
-                        })
+                const modifiers: IModifierItems[] = []
+                item.optionSets.forEach((optionSet) => {
+                    optionSet.items.forEach((op) => {
+                        const optionItem: IOptionItemMapping = optionsItem.find((option) => option.foodbitId == op.id)
+                        const modifier: IModifierItems = {
+                            barcode: optionItem.barcode,
+                            qty: 1 * item.quantity,
+                            modifier_price: op.price
+                        }
+                        totalModifierPrice += op.price
+                        modifiers.push(modifier)
                     })
-                    console.log(`totalModifierPricetotalModifierPrice ${totalModifierPrice}`)
-                    let priceWithoutModifier = item.total - (totalModifierPrice*item.quantity)
-                    console.log(`priceWithoutModifierpriceWithoutModifier ${priceWithoutModifier}`)
-                    let priceItem = priceWithoutModifier / item.quantity
-                    console.log(`priceItempriceItempriceItem ${priceItem}`)
-                     discount += ( item.price - priceItem) * item.quantity
-                    const itemRevel: IItemOrderRevel = {
-                        quantity: item.quantity,
-                        barcode: itemMapping.barcode,
-                        price: item.price,
-                        modifieritems: modifiers
-                    }
-                    itemsRevel.push(itemRevel)
                 })
+                let priceWithoutModifier = item.total - (totalModifierPrice * item.quantity)
+                let priceItem = priceWithoutModifier / item.quantity
+                discount += (item.price - priceItem) * item.quantity
+
+                const itemRevel: IItemOrderRevel = {
+                    quantity: item.quantity,
+                    barcode: itemMapping.barcode,
+                    price: item.price,
+                    modifieritems: modifiers
+                }
+                itemsRevel.push(itemRevel)
             }
         }))
 
-        console.log(`discountdiscountdiscountdiscount  ${discount}`)
 
-        
+
         //#endregion
 
         //#region  Customer
@@ -155,7 +150,6 @@ const SyncOrders: AzureFunction = async function (
                 console.log("I'm in update Customer")
                 const name: splitNameSpace[] = Utils.splitSpaces(data.customer.name)
 
-                console.log(`data.customerdata.customerdata.customer ${JSON.stringify(data.customer)}`)
                 customerRevel = {
                     first_name: name ? name[0].first_Name : null,
                     last_name: name ? name[0].last_Name : null,
@@ -204,7 +198,6 @@ const SyncOrders: AzureFunction = async function (
         }
         //#endregion
 
-
         //#region order
 
 
@@ -213,44 +206,59 @@ const SyncOrders: AzureFunction = async function (
             customer: customerRevel
         }
 
-        let discountOrder : IDiscount[] = []
+        let discountOrder: IDiscount[] = []
         const discounts: IDiscount = {
             barcode: accountConfig.discount_barcode,
             amount: discount
         }
         discountOrder.push(discounts)
-
-        const OrderRevel: IOrderRevel = {
-            establishment: establishmentId,
-            items: itemsRevel,
-            orderInfo: orderInfo,
-            discounts: discountOrder,
+        let OrderRevel: IOrderRevel
+        if (discount > 0) {
+            OrderRevel = {
+                establishment: establishmentId,
+                items: itemsRevel,
+                orderInfo: orderInfo,
+                discounts: discountOrder,
+            }
+        }
+        else {
+            OrderRevel = {
+                establishment: establishmentId,
+                items: itemsRevel,
+                orderInfo: orderInfo
+            }
         }
 
-        console.log(`OrderRevel ${JSON.stringify(OrderRevel)}`)
-        // const orderRevelResponse = await Revel.RevelSendRequest({
-        //     url: `${baseURL}${SystemUrl.ORDER}`,
-        //     headers: {
-        //         contentType: "application/json",
-        //         token: `${accountConfig.revel_auth}`,
-        //     },
-        //     method: MethodEnum.POST,
-        //     data: OrderRevel
-        // });
+        const orderRevelResponse = await Revel.RevelSendRequest({
+            url: `${baseURL}${SystemUrl.ORDER}`,
+            headers: {
+                contentType: "application/json",
+                token: `${accountConfig.revel_auth}`,
+            },
+            method: MethodEnum.POST,
+            data: OrderRevel
+        });
 
-        // //insert in db
-        // const orderData: IOrderMapping = {
-        //     revelId: orderRevelResponse.orderId,
-        //     foodbitId: data.id,
-        //     type: data.type,
-        //     establishmentId: establishmentId,
-        //     total: data.total,
-        //     notes: "",
-        //     dining_option: OrderRevel.orderInfo.dining_option,
-        //     created_date: orderRevelResponse.created_date
-        // };
-        // DB.insertOrder(accountConfig.schema_name, orderData)
+        //insert in db
+        const orderData: IOrderMapping = {
+            revelId: orderRevelResponse.orderId,
+            foodbitId: data.id,
+            type: data.type,
+            establishmentId: establishmentId,
+            total: data.total,
+            notes: "",
+            dining_option: OrderRevel.orderInfo.dining_option,
+            created_date: orderRevelResponse.created_date
+        };
+        DB.insertOrder(accountConfig.schema_name, orderData)
 
+        context.res = {
+            status: 200,
+            body: JSON.stringify(OrderRevel),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        };
         //#endregion
     } catch (error) {
         console.log(error)

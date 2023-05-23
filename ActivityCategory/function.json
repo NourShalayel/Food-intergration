@@ -6,5 +6,5 @@
       "direction": "in"
     }
   ],
-  "scriptFile": "../dist/ActivityCreateOptionSet/index.js"
+  "scriptFile": "../dist/ActivityCategory/index.js"
 }

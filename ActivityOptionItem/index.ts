@@ -16,22 +16,28 @@ import { DB } from "../Helper/DB";
 import { Foodbit } from "../Helper/Foodbit";
 import { Utils } from "../Helper/Utils";
 import { IOptionItemFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
-import { splitNameLanguag } from "../Interface/Revel/IMenu.interface";
+import { ids, splitNameLanguag } from "../Interface/Revel/IMenu.interface";
 import { IOptionItemMapping } from "../Interface/SettingMapping/IOptionItemMapping.interface";
 import { IOptionSetMapping } from "../Interface/SettingMapping/IOptionSetMapping.interface";
 import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface";
+import { IAccountConfig } from "../Interface/IAccountConfig";
 
 const activityFunction: AzureFunction = async function (context: Context) {
-  const accountConfig = context.bindingData.data.accountConfig
+
+  await Utils.delay(2000);
+  const accountConfig : IAccountConfig = context.bindingData.data.accountConfig
   const modifiers = context.bindingData.data.modifiers.modifiers
 
+  console.log(`modifiersmodifiersmodifiers ${JSON.stringify(modifiers)}`)
   //#region create optionItem if not exist or update 
   console.log("********************* activity 4 *********************")
 
-  console.log(`modifiersmodifiersmodifiersmodifiers ${JSON.stringify(modifiers)}`)
 
   modifiers.forEach(async (modifier) => {
     try {
+
+      let optionsSetsIds: ids[] = []
+
       const optionItemsMapping: IOptionItemMapping[] = await DB.getOptionItem(accountConfig['schema_name'])
       const optionItemMapping: IOptionItemMapping = optionItemsMapping.find(optionItem => optionItem.revelId == modifier.id.toString())
       // get optionSet is to pass this id in option item 
@@ -53,17 +59,24 @@ const activityFunction: AzureFunction = async function (context: Context) {
       const name: splitNameLanguag[] = Utils.splitNameByLanguage(modifier.name)
       // // check if optionItemMapping empty=>create or not=>update 
       if (optionItemMapping == undefined || optionItemMapping == null) {
+        const optionSet_id: ids = {
+          id: optionSetId
+        }
+        const FindOptionSet = optionsSetsIds.find(option => option.id === optionSetId);
+        if (!FindOptionSet) {
+          optionsSetsIds.push(optionSet_id);
+        }
         //create 
         const optionItemFoodbit: IOptionItemFoodbit = {
           name: {
             en: name[0].en,
             ar: name[0].ar,
           },
-          merchantId: accountConfig.MerchantId,
+          merchantId: accountConfig.merchant_id,
           isHidden: modifier.active,
           entityType: EntityType.MENU_OPTION_ITEM,
           price: modifier.price,
-          optionSets: [{ id: optionSetId }],
+          optionSets: optionsSetsIds,
         }
         const foodbitOptionItemResponse: IOptionItemFoodbit[] = await Foodbit.craeteOptionItem(accountConfig, optionItemFoodbit)
 
@@ -74,7 +87,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
           nameAr: foodbitOptionItemResponse[0].name.ar || "",
           createdDate: foodbitOptionItemResponse[0].createdDate,
           price: foodbitOptionItemResponse[0].price,
-          barcode : modifier.barcode ? modifier.barcode.toString() : ""
+          barcode: modifier.barcode ? modifier.barcode.toString() : "",
+          optionsSetIds: optionsSetsIds ? JSON.stringify(optionsSetsIds).toString() : ""
         };
         new Promise((resolve, rejects) => {
           DB.insertOptionItem(accountConfig['schema_name'], optionItemData)
@@ -87,15 +101,24 @@ const activityFunction: AzureFunction = async function (context: Context) {
 
       } else {
         //update
+
+        optionsSetsIds = JSON.parse(optionItemMapping.optionsSetIds)
+        const optionSet_id: ids = {
+          id: optionSetId
+        }
+        const FindOptionSet = optionsSetsIds.find(item => item.id === optionSetId);
+        if (!FindOptionSet) {
+          optionsSetsIds.push(optionSet_id);
+        }
         const optionItemFoodbit: IOptionItemFoodbit = {
           name: {
             en: name[0].en,
             ar: name[0].ar,
           },
-          merchantId: accountConfig.MerchantId,
+          merchantId: accountConfig.merchant_id,
           isHidden: modifier.active,
           price: modifier.price,
-          optionSets: [{ id: optionSetId }],
+          optionSets: optionsSetsIds,
         }
         const foodbitOptionItemResponse: IOptionItemFoodbit = await Foodbit.updateOptionItem(accountConfig, optionItemFoodbit, optionItemMapping.foodbitId)
         const optionItemData: IOptionItemMapping = {
@@ -103,8 +126,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
           nameAr: foodbitOptionItemResponse.name.ar || "",
           updatedDate: foodbitOptionItemResponse.lastUpdated,
           price: foodbitOptionItemResponse.price,
-          barcode : modifier.barcode.toString()
-
+          barcode: modifier.barcode ? modifier.barcode.toString() : "",
+          optionsSetIds: optionsSetsIds ? JSON.stringify(optionsSetsIds).toString() : ""
         };
         await DB.updateOptionItem(accountConfig['schema_name'], optionItemData, foodbitOptionItemResponse.id)
       }
@@ -113,7 +136,6 @@ const activityFunction: AzureFunction = async function (context: Context) {
       console.log(`Error in Flow OptionItem ${error}`)
 
       var date = Date.now()
-
       const errorDetails: IMenuSyncErrorMapping = {
         revelId: modifier.id.toString(),
         message: error.message,

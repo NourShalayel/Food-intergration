@@ -19,76 +19,81 @@ import { stores, IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interfac
 import { splitNameLanguag } from "../Interface/Revel/IMenu.interface"
 import { IMenuMapping } from "../Interface/SettingMapping/IMenuMapping.interface"
 import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface"
+import { IAccountConfig } from "../Interface/IAccountConfig"
 
-const activityFunction: AzureFunction = async function (context: Context): Promise<any> {
+const activityFunction: AzureFunction = async function (context: Context) {
 
     //#region create menu if not exsit or update 
     // get all menu from database 
 
 
-    const accountConfig = context.bindingData.data.accountConfig
+    const accountConfig: IAccountConfig = context.bindingData.data.accountConfig
     const locationsMapping = context.bindingData.data.locationsMapping
 
-    console.log(`accountConfigaccountConfigaccountConfig ${JSON.stringify(accountConfig)}`)
-    const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.schemaName)
-    const menus = context.bindingData.data.menu
+    const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.schema_name)
+    const menu = context.bindingData.data.menu
+    let menuFoodbitId
+    let menuName
 
-    // if menu not exist ==> create menu with data(name , )
+    //check if this menu in database 
+    try {
+        const locations: stores[] = locationsMapping.map((location) => ({
+            id: location.foodbitId
+        }))
+        const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && (menuMapping.foodbitStoreId == menu.foodbitStoreId) || menuMapping.foodbitStoreId == JSON.stringify(locations).toString())
+        // get name from revel and spilt by use function to ar / en 
+        const name: splitNameLanguag[] = Utils.splitNameByLanguage(menu.menuName)
+        if (menuMapping === undefined || menuMapping === null || !menuMapping) {
 
+            const menuFoodbit: IMenuFoodbit = {
+                name: {
+                    en: name[0].en,
+                    ar: name[0].ar,
+                },
+                stores: locations,
+                merchantId: accountConfig.merchant_id,
+                entityType: EntityType.MENU,
+                isHidden: false
+            };
+            const foodbitMenuResponse: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuFoodbit)
+            //insert in db
+            const menuData: IMenuMapping = {
+                foodbitId: foodbitMenuResponse.id,
+                nameEn: foodbitMenuResponse.name.en || "",
+                nameAr: foodbitMenuResponse.name.ar || "",
+                createdDate: foodbitMenuResponse.createdDate,
+                foodbitStoreId: JSON.stringify(locations).toString(),
+            };
 
-    await Promise.all(menus.map(async (menu) => {
-        //check if this menu in database 
-        try {
-            const locations: stores[] = locationsMapping.map((location) => ({
-                id: location.foodbitId
-            }))
-            const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && (menuMapping.foodbitStoreId == menu.foodbitStoreId) || menuMapping.foodbitStoreId == JSON.stringify(locations).toString())
-            // get name from revel and spilt by use function to ar / en 
-            const name: splitNameLanguag[] = Utils.splitNameByLanguage(menu.menuName)
-            if (menuMapping === undefined || menuMapping === null || !menuMapping) {
-
-                const menuFoodbit: IMenuFoodbit = {
-                    name: {
-                        en: name[0].en,
-                        ar: name[0].ar,
-                    },
-                    stores: locations,
-                    merchantId: accountConfig.MerchantId,
-                    entityType: EntityType.MENU,
-                    isHidden: false
-                };
-
-
-                const foodbitMenuResponse: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuFoodbit)
-                //insert in db
-                const menuData: IMenuMapping = {
-                    foodbitId: foodbitMenuResponse.id,
-                    nameEn: foodbitMenuResponse.name.en || "",
-                    nameAr: foodbitMenuResponse.name.ar || "",
-                    createdDate: foodbitMenuResponse.createdDate,
-                    foodbitStoreId: JSON.stringify(locations).toString(),
-                };
-                const menusDB = DB.insertMenus(accountConfig['schema_name'], menuData)
-
-                return menusDB;
+            menuFoodbitId = foodbitMenuResponse.id
+            menuName = menu.menuName
+            DB.insertMenus(accountConfig['schema_name'], menuData)
+            return {
+                'categories': menu.categories,
+                'menuId': menuFoodbitId,
+                'menuName': menuName
             }
-        } catch (error) {
-            console.log(`Error in Flow Menu ${error}`)
-
-            var date = Date.now()
-
-            const errorDetails: IMenuSyncErrorMapping = {
-                revelId: menu.menuName,
-                message: error.message,
-                syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-                type: EntityType.MENU
+        } else {
+            menuFoodbitId = menuMapping.foodbitId
+            return {
+                'categories': menu.categories,
+                'menuId': menuFoodbitId,
+                'menuName': menuName
             }
-            await DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
         }
-    })
-    )
+    } catch (error) {
+        console.log(`Error in Flow Menu ${error}`)
 
+        var date = Date.now()
 
+        const errorDetails: IMenuSyncErrorMapping = {
+            revelId: menu.menuName,
+            message: error.message,
+            syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
+            type: EntityType.MENU
+        }
+        await DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
+    }
     //#endregion
 };
 

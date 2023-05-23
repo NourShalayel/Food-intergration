@@ -23,6 +23,8 @@ import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncErro
 
 const activityFunction: AzureFunction = async function (context: Context) {
 
+
+    // get data from orch and previous activity  
     const accountConfig = context.bindingData.data.accountConfig
     const item = context.bindingData.data.item
 
@@ -30,25 +32,30 @@ const activityFunction: AzureFunction = async function (context: Context) {
     //#region create product if not exist or update 
     console.log("********************* activity 2 *********************")
 
-
+    // get item from db to check if in db ===> update / else ===> create 
     const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig['schema_name'])
     const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schema_name'])
+
+    // add item id in array to update this in table categry 
     let itemsIds: ids[] = [];
 
+    // get category from db to take category foodbitId to make item fllow this category 
     const categoryMapping: ICategoryMapping = await categoriesMapping.find(cateMapping => {
         if (cateMapping.revelId == item.id_category.toString()) {
             return true; // return true to include the categoryMapping in the result
         }
     });
     const categoryId: string = await categoryMapping ? categoryMapping.foodbitId : "";
-    try {
 
+
+    try {
         const itemMapping = itemsMapping.find((itemMap => itemMap.barcode == item.barcode))
+
         // get name from revel and spilt by use function to ar / en 
         const name: splitNameLanguag[] = await Utils.splitNameByLanguage(item.name)
         const description: splitNameLanguag[] = await Utils.splitNameByLanguage(item.description)
 
-
+        // check if itemMapping found ===> update / else create 
         if (itemMapping === undefined || itemMapping === null) {
             //create
             const itemFoodbit: IItemFoodbit = {
@@ -72,6 +79,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
             }
             const foodbitItemResponse: IItemFoodbit = await Foodbit.createItem(accountConfig, itemFoodbit)
 
+            // preaper payload to start insert in db 
             const itemData: IItemMapping = {
                 revelId: item.id.toString(),
                 foodbitId: foodbitItemResponse.id,
@@ -82,13 +90,12 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 barcode: item.barcode,
                 createdDate: foodbitItemResponse.createdDate,
             };
-            const itemsDB = DB.insertItems(accountConfig['schema_name'], itemData)
+            DB.insertItems(accountConfig['schema_name'], itemData)
 
             // add item in list and add this list in category table ===> update category table 
             const itemId: ids = {
                 id: itemData.foodbitId.toString()
             }
-
             itemsIds = [...itemsIds, itemId];
             // await DB.updateItemIds(accountConfig['schema_name'], itemsIds, categoryId)
         } else {
@@ -136,6 +143,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
         await DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
     }
 
+
+    // return modifier_classes and itemId to create option set or modifier class after item 
     return {
         "modifier_classes": item.modifier_classes,
         "itemId": item.id

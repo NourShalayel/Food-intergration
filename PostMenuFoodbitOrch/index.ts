@@ -32,33 +32,44 @@ function* orchCallback(context) {
     createMenu['account'] = account
     createMenu['accountConfig'] = accountConfig
     createMenu['locationsMapping'] = locationsMapping
-    if (accountConfig.MenuStatus === "one") {
+    if (accountConfig.menu_status === "one") {
         const OneMenuRevel = yield context.df.callActivity('ActivityGetOneMenuRevel', accountName);
         const menus = OneMenuRevel.data
         createMenu['menu'] = menus
         //one menu
-
-        yield context.df.callActivity('ActivityCreateOneMenu', createMenu);
-        // console.log(`menus ${JSON.stringify(menus)}`)
-    } else {
+        const categories = yield context.df.callActivity('ActivityCreateOneMenu', createMenu)
+        createMenu['categories'] = categories
+        const items = yield context.df.callActivity('ActivityCategory', createMenu)
+        createMenu['items'] = items
+        for (const item of items) {
+            createMenu['item'] = item
+            const modifier_classes = yield context.df.callActivity('ActivityItem', createMenu)
+            createMenu['modifier_classes'] = modifier_classes
+            const modifiers = yield context.df.callActivity('ActivityOptionSet', createMenu)
+            createMenu['modifiers'] = modifiers
+            yield context.df.callActivity('ActivityOptionItem', createMenu)
+        }
+    }
+    else {
         const AllMenuRevel = yield context.df.callActivity('ActivityGetAllMenuRevel', accountName);
         // all menu 
         for (const menu of AllMenuRevel) {
             createMenu['menu'] = menu
             const categories = yield context.df.callActivity('ActivityCreateManyMenu', createMenu);
             createMenu['categories'] = categories
-            const items = yield context.df.callActivity('ActivityCreateCategory', createMenu)
+            const items = yield context.df.callActivity('ActivityCategory', createMenu)
             createMenu['items'] = items
             for (const item of items) {
                 createMenu['item'] = item
-                const modifier_classes = yield context.df.callActivity('ActivityCreateItem', createMenu)
+                const modifier_classes = yield context.df.callActivity('ActivityItem', createMenu)
                 createMenu['modifier_classes'] = modifier_classes
-                const modifiers = yield context.df.callActivity('ActivityCreateOptionSet', createMenu)
+                const modifiers = yield context.df.callActivity('ActivityOptionSet', createMenu)
                 createMenu['modifiers'] = modifiers
-                yield context.df.callActivity('ActivityCreateOptionItem', createMenu)
+                yield context.df.callActivity('ActivityOptionItem', createMenu)
             }
         }
     }
+    
 
 }
 

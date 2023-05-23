@@ -27,9 +27,6 @@ const activityFunction: AzureFunction = async function (context: Context) {
     let menuFoodbitId
     let menuName
     //#region create menu if not exsit or update 
-
-    console.log(`accountConfigaccountConfigaccountConfig ${JSON.stringify(accountConfig)}`)
-
     
     try {
         const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
@@ -91,7 +88,6 @@ const activityFunction: AzureFunction = async function (context: Context) {
         }
         await DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
     }
-
     //#endregion
 
 

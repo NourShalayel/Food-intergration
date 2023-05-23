@@ -36,9 +36,9 @@ export class Utils {
     }
   }
 
-  public static sleep(delay) {
-    return new Promise(resolve => setTimeout(resolve, delay));
-  }
+  public static delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 }
 
 

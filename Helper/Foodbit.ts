@@ -83,8 +83,6 @@ export class Foodbit {
 
   public static createOptionSet =  async ( accountConfig : IAccountConfig, optionData: IOptionSetFoodbit) => {
     try {
-
-      console.log(`createOptionSetcreateOptionSetcreateOptionSetcreateOptionSet`)
       const option = await Foodbit.FoodbitSendRequest({
         url: `${SystemUrl.FOODBITMENU}${accountConfig['merchant_id']}/menus/option-sets`,
         headers: {

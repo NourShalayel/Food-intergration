@@ -20,19 +20,23 @@ import { ids, splitNameLanguag } from "../Interface/Revel/IMenu.interface";
 import { IItemMapping } from "../Interface/SettingMapping/IItemMapping.interface";
 import { IOptionSetMapping } from "../Interface/SettingMapping/IOptionSetMapping.interface";
 import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface";
-import { sequelize } from "../sequlizeConfig";
 
 const activityFunction: AzureFunction = async function (context: Context) {
 
-
+    // get data from orch and previous activity 
     const accountConfig = context.bindingData.data.accountConfig
     const modifier_classes = context.bindingData.data.modifier_classes.modifier_classes
     const itemId = context.bindingData.data.modifier_classes.itemId
+
+    // array to add modifier or option item to send the next activity (Activity optionITEM )
     const modifiers = []
+
+
     //#region create optionSet if not exist or update  
     console.log("========================== activity 3 ============================")
     modifier_classes.forEach(async (mod_class) => {
         try {
+            
             let itemsIds: ids[] = []
 
             modifiers.push(...mod_class.modifiers)
@@ -119,6 +123,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                     nameEn: foodbitOptionResponse.name.en || "",
                     nameAr: foodbitOptionResponse.name.ar || "",
                     updatedDate: foodbitOptionResponse.lastUpdated,
+                    itemIds: JSON.stringify(itemsIds).toString()
                 };
 
                 await DB.updateOptionSet(accountConfig['schema_name'], optionSetData, foodbitOptionResponse.id)
