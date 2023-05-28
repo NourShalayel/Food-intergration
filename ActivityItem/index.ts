@@ -15,7 +15,7 @@ import { EntityType } from "../Common/Enums/EntityType"
 import { DB } from "../Helper/DB"
 import { Foodbit } from "../Helper/Foodbit"
 import { Utils } from "../Helper/Utils"
-import { IItemFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface"
+import { IItemFoodbit, availability } from "../Interface/Foodbit/IMenuFoodbit.interface"
 import { ids, splitNameLanguag } from "../Interface/Revel/IMenu.interface"
 import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.interface"
 import { IItemMapping } from "../Interface/SettingMapping/IItemMapping.interface"
@@ -23,6 +23,7 @@ import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncErro
 
 const activityFunction: AzureFunction = async function (context: Context) {
 
+    await Utils.delay(2000);
 
     // get data from orch and previous activity  
     const accountConfig = context.bindingData.data.accountConfig
@@ -58,6 +59,11 @@ const activityFunction: AzureFunction = async function (context: Context) {
         // check if itemMapping found ===> update / else create 
         if (itemMapping === undefined || itemMapping === null) {
             //create
+            const availability: availability = {
+                isHidden: false,
+                isAvailableNow: true,
+                isUnAvailable: false
+            }
             const itemFoodbit: IItemFoodbit = {
                 name: {
                     en: name[0].en,
@@ -72,10 +78,10 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 merchantId: accountConfig.MerchantId,
                 profilePic: item.image,
                 categoryId: categoryId,
-                // total :  ,
-                price: item.price
+                total: item.price,
+                price: item.price,
                 // calories?:string
-                // availability?: availability
+                availability: availability
             }
             const foodbitItemResponse: IItemFoodbit = await Foodbit.createItem(accountConfig, itemFoodbit)
 
@@ -100,6 +106,11 @@ const activityFunction: AzureFunction = async function (context: Context) {
             // await DB.updateItemIds(accountConfig['schema_name'], itemsIds, categoryId)
         } else {
             //update
+            const availability: availability = {
+                isHidden: false,
+                isAvailableNow: true,
+                isUnAvailable: false
+            }
             const itemFoodbit: IItemFoodbit = {
                 name: {
                     en: name[0].en,
@@ -113,10 +124,10 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 merchantId: accountConfig.MerchantId,
                 profilePic: item.image,
                 categoryId: categoryId,
-                // total :  ,
-                price: item.price
+                total: item.price,
+                price: item.price,
                 // calories?:string
-                // availability?: availability
+                availability: availability
             }
             const foodbitItemResponse: IItemFoodbit = await Foodbit.updateItem(accountConfig, itemFoodbit, itemMapping.foodbitId)
             const itemData: IItemMapping = {

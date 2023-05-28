@@ -162,6 +162,7 @@ export class Foodbit {
         method: MethodEnum.PATCH,
         data : optionData
       });
+      console.log(`update optionSet done `)
       return option;
     } catch (error) {
       console.error(error);

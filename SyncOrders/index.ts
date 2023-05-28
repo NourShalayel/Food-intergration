@@ -21,40 +21,43 @@ import { IOptionItemMapping } from "../Interface/SettingMapping/IOptionItemMappi
 const SyncOrders: AzureFunction = async function (
     context: Context,
     req: HttpRequest
-): Promise<void> {
-    try {
-        //#region  get revelAccount from header to get schemaName from database
-        const account: string | undefined = req.headers.revelaccount;
-        const data: IOrderFoodbit = req.body;
+): Promise<string> {
 
-        //check if item in database or not 
+
+    //#region  get revelAccount from header to get schemaName from database
+    const account: string | undefined = req.headers.revelaccount;
+    const data: IOrderFoodbit = req.body;
+    //#endregion
+
+    //#region DB Connection
+    const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
+    const locationsMapping: ILocationMapping[] = await DB.getLocations(
+        accountConfig.schema_name
+    )
+    const baseURL: string = `https://${accountConfig.revel_account}.revelup.com/`;
+    //#endregion
+
+    //#region get establishment revel from db based store id 
+    let establishmentId: number = 0
+
+    const locationMapping: ILocationMapping = locationsMapping.find((locationMap => locationMap.foodbitId == data.check.storeId))
+    if (locationMapping != null || locationMapping != undefined) {
+        establishmentId = locationMapping.revelId
+    }
+    //#endregion
+
+
+    try {
         if (!account) {
             context.res = {
                 status: 400,
-                body:  { error : "Missing RevelAccount header in the request"},
+                body: { error: "Missing RevelAccount header in the request" },
                 headers: {
                     "Content-Type": "application/json"
                 }
             }
         } else {
-            //#endregion
 
-            //#region DB Connection
-            const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
-            const locationsMapping: ILocationMapping[] = await DB.getLocations(
-                accountConfig.schema_name
-            )
-            const baseURL: string = `https://${accountConfig.revel_account}.revelup.com/`;
-            //#endregion
-
-            //#region get establishment revel from db based store id 
-            let establishmentId: number = 0
-
-            const locationMapping: ILocationMapping = locationsMapping.find((locationMap => locationMap.foodbitId == data.check.storeId))
-            if (locationMapping != null || locationMapping != undefined) {
-                establishmentId = locationMapping.revelId
-            }
-            //#endregion
 
             //#region  get item to add in order
             const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.schema_name)
@@ -70,7 +73,7 @@ const SyncOrders: AzureFunction = async function (
                         optionSet.items.forEach((op) => {
                             const optionItem: IOptionItemMapping = optionsItem.find((option) => option.foodbitId == op.id)
                             const modifier: IModifierItems = {
-                                barcode: optionItem.barcode,
+                                barcode: optionItem.barcode.toString(),
                                 qty: 1,
                                 modifier_price: op.price
                             }
@@ -94,19 +97,19 @@ const SyncOrders: AzureFunction = async function (
             }))
 
 
-
             //#endregion
 
             //#region  Customer
-            // create customer if not found in database / if found => update 
-            // get customer data 
+
             let customerRevel: CustomerRevel = new CustomerRevel();
-            const customersMapping: ICustomerMapping[] = await DB.getCustomers(
-                accountConfig.schema_name
-            )
-            const customerMapping = customersMapping.find(customer => customer.foodbitId == data.customerId)
-            //check 
             try {
+                // create customer if not found in database / if found => update 
+                // get customer data 
+                const customersMapping: ICustomerMapping[] = await DB.getCustomers(
+                    accountConfig.schema_name
+                )
+                const customerMapping = customersMapping.find(customer => customer.foodbitId == data.customerId)
+                //check 
                 if (customerMapping === undefined || customerMapping === null) {
                     // create 
                     const name: splitNameSpace[] = Utils.splitSpaces(data.customer.name)
@@ -184,9 +187,7 @@ const SyncOrders: AzureFunction = async function (
 
                     await DB.updateCustomer(accountConfig.schema_name, customerData, customerMapping.revelId)
                 }
-
             } catch (error) {
-
                 console.log(`Error in Flow Customer ${error}`)
                 var date = Date.now()
                 const errorDetails: IOrderSyncErrors = {
@@ -197,6 +198,7 @@ const SyncOrders: AzureFunction = async function (
                 }
                 await DB.insertOrderSyncError(accountConfig.schema_name, errorDetails)
             }
+
             //#endregion
 
             //#region order
@@ -259,11 +261,32 @@ const SyncOrders: AzureFunction = async function (
                     "Content-Type": "application/json"
                 }
             }
+
+            return JSON.stringify(orderRevelResponse)
+            //#endregion
         }
-        //#endregion
 
     } catch (error) {
-        console.log(error)
+
+        console.log(`Error in Flow Order ${error}`)
+        var date = Date.now()
+        const errorDetails: IOrderSyncErrors = {
+            foodbitId: data.id,
+            message: error.message,
+            syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
+            type: EntityType.ORDER
+        }
+        await DB.insertOrderSyncError(accountConfig.schema_name, errorDetails)
+
+        
+        context.res = {
+            status: 500,
+            body:  {"error" : error.message
+        },
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
     }
 
 };

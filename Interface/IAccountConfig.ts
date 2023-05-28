@@ -12,7 +12,9 @@ export const AccountConfigTabel = sequelize.define(
     menu_status: DataType.STRING,
     revel_user_id: DataType.STRING,
     dining_option: DataType.STRING,
-    discount_barcode:DataType.STRING
+    discount_barcode: DataType.STRING,
+    menu_name: DataType.STRING,
+    establishment_id: DataType.INTEGER
   },
   { createdAt: false, updatedAt: false }
 );
@@ -26,5 +28,7 @@ export interface IAccountConfig {
   menu_status: string
   revel_user_id?: string
   dining_option?: string
-  discount_barcode?:string
+  discount_barcode?: string
+  menu_name?: string
+  establishment_id?: number
 }

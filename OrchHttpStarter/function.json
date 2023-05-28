@@ -8,12 +8,11 @@
       "route": "orchestrators/PostMenuFoodbitOrch",
 
       "methods": [
-        "get",
         "post"
       ]
     },
     {
-      "name": "$return",
+      "name": "res",
       "type": "http",
       "direction": "out"
     },

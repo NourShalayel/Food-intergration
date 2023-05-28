@@ -28,6 +28,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
     const modifier_classes = context.bindingData.data.modifier_classes.modifier_classes
     const itemId = context.bindingData.data.modifier_classes.itemId
 
+    console.log(`itemIditemIditemId ${itemId}`)
     // array to add modifier or option item to send the next activity (Activity optionITEM )
     const modifiers = []
 
@@ -65,6 +66,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 if (!FindItems) {
                     itemsIds.push(items_id);
                 }
+
+                console.log(`item_iditem_id ${item_id}`)
                 const optionSetFoodbit: IOptionSetFoodbit = {
                     name: {
                         en: name[0].en,
@@ -93,6 +96,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 await DB.insertOptionSet(accountConfig['schema_name'], optionSetData);
             } else {
                 //update
+                console.log(`item_iditem_id ${item_id}`)
+
                 itemsIds = JSON.parse(optionSetMapping.itemIds)
                 const items_id: ids = {
                     id: item_id
@@ -102,6 +107,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                     itemsIds.push(items_id);
                 }
 
+                console.log(`itemsIdsitemsIdsitemsIds ${JSON.stringify(itemsIds)}`)
 
                 const optionSetFoodbit: IOptionSetFoodbit = {
                     name: {

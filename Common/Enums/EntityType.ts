@@ -4,5 +4,6 @@ export enum EntityType {
     MENU_ITEM = 'MENU_ITEM',
     MENU_OPTION_ITEM = 'MENU_OPTION_ITEM',
     MENU_OPTIONS = 'MENU_OPTIONS',
-    CUSTOMER = 'CUSTOMER'
+    CUSTOMER = 'CUSTOMER',
+    ORDER = 'ORDER'
   }

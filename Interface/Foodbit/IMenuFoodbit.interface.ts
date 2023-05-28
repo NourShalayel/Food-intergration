@@ -13,7 +13,7 @@ export interface IMenuFoodbit {
     position?: number
     categories?: ICategoryFoodbit[]
 }
-interface availability {
+export interface availability {
     isHidden: boolean;
     isAvailableNow: boolean;
     isUnAvailable: boolean;

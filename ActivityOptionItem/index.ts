@@ -24,7 +24,7 @@ import { IAccountConfig } from "../Interface/IAccountConfig";
 
 const activityFunction: AzureFunction = async function (context: Context) {
 
-  await Utils.delay(2000);
+  await Utils.delay(4000);
   const accountConfig : IAccountConfig = context.bindingData.data.accountConfig
   const modifiers = context.bindingData.data.modifiers.modifiers
 
