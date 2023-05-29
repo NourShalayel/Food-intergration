@@ -72,7 +72,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
             return {
                 'categories': menu.categories,
                 'menuId': menuFoodbitId,
-                'menuName': menuName
+                'menuName': menuName ,
+                'menuStore' :  menu.foodbitStoreId
             }
         }
     } catch (error) {

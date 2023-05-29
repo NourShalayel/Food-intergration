@@ -28,6 +28,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
     // get data from orch and previous activity  
     const accountConfig = context.bindingData.data.accountConfig
     const item = context.bindingData.data.item
+    const menuId = context.bindingData.data.categories.menuId
 
 
     //#region create product if not exist or update 
@@ -55,6 +56,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
         // get name from revel and spilt by use function to ar / en 
         const name: splitNameLanguag[] = await Utils.splitNameByLanguage(item.name)
         const description: splitNameLanguag[] = await Utils.splitNameByLanguage(item.description)
+        let menuIds: ids[] = []
 
         // check if itemMapping found ===> update / else create 
         if (itemMapping === undefined || itemMapping === null) {
@@ -64,6 +66,15 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 isAvailableNow: true,
                 isUnAvailable: false
             }
+
+            const menusId: ids = {
+                id: menuId
+            }
+            const FindIMenus = menuIds.find(menu => menu.id === menuId);
+            if (!FindIMenus) {
+                menuIds.push(menusId);
+            }
+
             const itemFoodbit: IItemFoodbit = {
                 name: {
                     en: name[0].en,
@@ -95,6 +106,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 price: foodbitItemResponse.price,
                 barcode: item.barcode,
                 createdDate: foodbitItemResponse.createdDate,
+                menuIds :  JSON.stringify(menuIds).toString()
             };
             DB.insertItems(accountConfig['schema_name'], itemData)
 
@@ -106,6 +118,17 @@ const activityFunction: AzureFunction = async function (context: Context) {
             // await DB.updateItemIds(accountConfig['schema_name'], itemsIds, categoryId)
         } else {
             //update
+
+            
+            menuIds = JSON.parse(itemMapping.menuIds)
+            const menusId: ids = {
+                id: menuId
+            }
+            const FindMenus = menuIds.find(menu => menu.id === menuId);
+            if (!FindMenus) {
+                menuIds.push(menusId);
+            }
+
             const availability: availability = {
                 isHidden: false,
                 isAvailableNow: true,
@@ -137,6 +160,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 price: foodbitItemResponse.price,
                 barcode: item.barcode,
                 updatedDate: foodbitItemResponse.lastUpdated,
+                menuIds :  JSON.stringify(menuIds).toString()
             };
 
             await DB.updateItems(accountConfig['schema_name'], itemData, foodbitItemResponse.id)

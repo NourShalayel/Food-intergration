@@ -14,23 +14,25 @@ export interface IMenuFoodbit {
     categories?: ICategoryFoodbit[]
 }
 export interface availability {
-    isHidden: boolean;
-    isAvailableNow: boolean;
-    isUnAvailable: boolean;
+    isHidden: boolean
+    isAvailableNow: boolean
+    isUnAvailable: boolean
+    hideFromStoreIds?: String[]
+    outOfStockForStoreIds?:String[]
 }
 export interface stores {
     id: string
 }
 export interface ICategoryFoodbit {
-    id?: string;
-    createdDate?: string;
-    lastUpdated?: string;
+    id?: string
+    createdDate?: string
+    lastUpdated?: string
     availability?: availability
-    merchantId?: string;
-    nameEn?: string;
-    name: names;
-    menus?: menus[];
-    entityType?: EntityType;
+    merchantId?: string
+    nameEn?: string
+    name: names
+    menus?: menus[]
+    entityType?: EntityType
     isHidden?: boolean
 }
 export interface IItemFoodbit {

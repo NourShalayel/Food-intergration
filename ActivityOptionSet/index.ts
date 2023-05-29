@@ -37,7 +37,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
     console.log("========================== activity 3 ============================")
     modifier_classes.forEach(async (mod_class) => {
         try {
-            
+
             let itemsIds: ids[] = []
 
             modifiers.push(...mod_class.modifiers)
@@ -67,7 +67,6 @@ const activityFunction: AzureFunction = async function (context: Context) {
                     itemsIds.push(items_id);
                 }
 
-                console.log(`item_iditem_id ${item_id}`)
                 const optionSetFoodbit: IOptionSetFoodbit = {
                     name: {
                         en: name[0].en,
@@ -77,8 +76,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
                     menuItems: itemsIds,
                     maximumNumberOfSelections: mod_class.maximum_amount,
                     minimumNumberOfSelections: mod_class.minimum_amount,
-                    enableMinimumSelections: mod_class.active,
-                    enableMaximumSelections: mod_class.active,
+                    enableMinimumSelections: false,
+                    enableMaximumSelections: false,
                     isHidden: mod_class.active,
                     entityType: EntityType.MENU_OPTIONS
                 }
@@ -96,7 +95,6 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 await DB.insertOptionSet(accountConfig['schema_name'], optionSetData);
             } else {
                 //update
-                console.log(`item_iditem_id ${item_id}`)
 
                 itemsIds = JSON.parse(optionSetMapping.itemIds)
                 const items_id: ids = {
@@ -107,8 +105,6 @@ const activityFunction: AzureFunction = async function (context: Context) {
                     itemsIds.push(items_id);
                 }
 
-                console.log(`itemsIdsitemsIdsitemsIds ${JSON.stringify(itemsIds)}`)
-
                 const optionSetFoodbit: IOptionSetFoodbit = {
                     name: {
                         en: name[0].en,
@@ -118,8 +114,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
                     menuItems: itemsIds,
                     maximumNumberOfSelections: mod_class.maximum_amount,
                     minimumNumberOfSelections: mod_class.minimum_amount,
-                    enableMinimumSelections: mod_class.active,
-                    enableMaximumSelections: mod_class.active,
+                    enableMinimumSelections: false,
+                    enableMaximumSelections: false,
                     isHidden: mod_class.active,
                     entityType: EntityType.MENU_OPTIONS
                 }

@@ -41,6 +41,7 @@ function* orchCallback(context) {
         createMenu['categories'] = categories
         const items = yield context.df.callActivity('ActivityCategory', createMenu)
         createMenu['items'] = items
+        yield context.df.callActivity('ActivityCheckItems', createMenu)
         for (const item of items) {
             createMenu['item'] = item
             const modifier_classes = yield context.df.callActivity('ActivityItem', createMenu)
@@ -59,6 +60,7 @@ function* orchCallback(context) {
             createMenu['categories'] = categories
             const items = yield context.df.callActivity('ActivityCategory', createMenu)
             createMenu['items'] = items
+            yield context.df.callActivity('ActivityCheckItems', createMenu)
             for (const item of items) {
                 createMenu['item'] = item
                 const modifier_classes = yield context.df.callActivity('ActivityItem', createMenu)
