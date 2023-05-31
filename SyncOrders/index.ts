@@ -27,7 +27,7 @@ const SyncOrders: AzureFunction = async function (
     let accountConfig: IAccountConfig
     const account: string | undefined = req.headers.revelaccount;
 
-    if (account == null || account ==undefined) {
+    if (account == null || account == undefined) {
         return {
             status: 400,
             body: { error: "Missing RevelAccount header in the request" },
@@ -40,33 +40,24 @@ const SyncOrders: AzureFunction = async function (
             data = req.body;
             //#endregion
 
-            //#region DB Connection
-            accountConfig = await DB.getAccountConfig("trustangle");
-            const locationsMapping: ILocationMapping[] = await DB.getLocations(
-                accountConfig.schema_name
-            )
-            const baseURL: string = `https://${accountConfig.revel_account}.revelup.com/`;
-            //#endregion
+            if (data.type === "DINE_IN") {
 
-            //#region get establishment revel from db based store id 
-            let establishmentId: number = 0
+                //#region DB Connection
+                accountConfig = await DB.getAccountConfig(account);
+                const locationsMapping: ILocationMapping[] = await DB.getLocations(
+                    accountConfig.schema_name
+                )
+                const baseURL: string = `https://${accountConfig.revel_account}.revelup.com/`;
+                //#endregion
 
-            const locationMapping: ILocationMapping = locationsMapping.find((locationMap => locationMap.foodbitId == data.check.storeId))
-            if (locationMapping != null || locationMapping != undefined) {
-                establishmentId = locationMapping.revelId
-            }
-            //#endregion
+                //#region get establishment revel from db based store id 
+                let establishmentId: number = 0
 
-            if (!account) {
-                context.res = {
-                    status: 400,
-                    body: { error: "Missing RevelAccount header in the request" },
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
+                const locationMapping: ILocationMapping = locationsMapping.find((locationMap => locationMap.foodbitId == data.check.storeId))
+                if (locationMapping != null || locationMapping != undefined) {
+                    establishmentId = locationMapping.revelId
                 }
-            } else {
-
+                //#endregion
 
                 //#region  get item to add in order
                 const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.schema_name)
@@ -273,6 +264,15 @@ const SyncOrders: AzureFunction = async function (
 
                 return JSON.stringify(orderRevelResponse)
                 //#endregion
+
+            } else {
+                context.res = {
+                    status: 200,
+                    body: {message : "flow active just to DINE_IN order"},
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
             }
 
         } catch (error) {
@@ -289,16 +289,16 @@ const SyncOrders: AzureFunction = async function (
 
             context.res = {
                 status: 500,
-                body: { "error": error.message },
+                body: {
+                    error: JSON.stringify(error.message),
+                    accountConfig: JSON.stringify(accountConfig) || 0,
+                    account: account || 0
+                },
                 headers: {
                     "Content-Type": "application/json"
                 }
             }
-            return {
-                error: JSON.stringify(error.message),
-                accountConfig: JSON.stringify(accountConfig) || 0,
-                account: account || 0
-            }
+
 
         }
     }
