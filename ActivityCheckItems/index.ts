@@ -1,9 +1,6 @@
 ﻿import { AzureFunction, Context } from "@azure/functions"
-import { DB } from "../Helper/DB";
-import { IItemMapping } from "../Interface/SettingMapping/IItemMapping.interface";
-import { IItemFoodbit, availability } from "../Interface/Foodbit/IMenuFoodbit.interface";
-import { Foodbit } from "../Helper/Foodbit";
-
+import * as I from '../Interface'
+import * as helper from '../Helper'
 const activityFunction: AzureFunction = async function (context: Context) {
 
 
@@ -14,7 +11,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
         const menuStore = context.bindingData.data.categories.menuStore || ""
 
         const items = context.bindingData.data.items
-        const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig['schema_name']);
+        const itemsMapping: I.IItemMapping[] = await helper.DB.getItems(accountConfig['schema_name']);
         let itemsNotActive: any[] = []
         itemsMapping.map((itemMapping) => {
             let itemNotActive = items.find((item) => item.id == itemMapping.revelId)
@@ -30,16 +27,16 @@ const activityFunction: AzureFunction = async function (context: Context) {
             // update item 
             for await (const item of itemsNotActive) {
                 //update
-                const availability: availability = {
+                const availability: I.availability = {
                     isHidden: true,
                     isAvailableNow: false,
                     isUnAvailable: true
                 }
-                const itemFoodbit: IItemFoodbit = {
+                const itemFoodbit: I.IItemFoodbit = {
                     availability: availability ,
                     isHidden : true
                 }
-                await Foodbit.updateItem(accountConfig, itemFoodbit, item.foodbitId)
+                await helper.Foodbit.updateItem(accountConfig, itemFoodbit, item.foodbitId)
             }
 
         }else {
@@ -47,17 +44,17 @@ const activityFunction: AzureFunction = async function (context: Context) {
 
                 
                 //update
-                const availability: availability = {
+                const availability: I.availability = {
                     isHidden: true,
                     isAvailableNow: false,
                     isUnAvailable: true ,
                     hideFromStoreIds: [menuStore],
                     // outOfStockForStoreIds: []
                 }
-                const itemFoodbit: IItemFoodbit = {
+                const itemFoodbit: I.IItemFoodbit = {
                     availability: availability ,
                 }
-                await Foodbit.updateItem(accountConfig, itemFoodbit, item.foodbitId)
+                await helper.Foodbit.updateItem(accountConfig, itemFoodbit, item.foodbitId)
             }
 
         }

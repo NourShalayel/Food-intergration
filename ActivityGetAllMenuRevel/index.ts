@@ -11,14 +11,9 @@
 
 import { AzureFunction, Context } from "@azure/functions"
 import { plainToClass } from "class-transformer";
-import { MethodEnum } from "../Common/Enums/Method.enum";
-import { SystemUrl } from "../Common/Enums/SystemEndPoint";
-import { Revel } from "../Helper/Revel";
-import { CustomMenu, Menu } from "../Interface/Revel/IMenu.interface";
-import { ILocationMapping } from "../Interface/SettingMapping/ILocationMapping.interface";
-import { DB } from "../Helper/DB";
-import { IAccountConfig } from "../Interface/IAccountConfig";
-import { ICustomMenuMapping } from "../Interface/SettingMapping/ICustomMenuMapping.interface";
+import * as I from '../Interface'
+import * as helper from '../Helper'
+import * as enums  from '../Enums'
 
 const activityFunction: AzureFunction = async function (context: Context): Promise<any> {
 
@@ -27,42 +22,42 @@ const activityFunction: AzureFunction = async function (context: Context): Promi
 
     //#region  get data from revel based on specific name and establishment
 
-    const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
-    const locationsMapping: ILocationMapping[] = await DB.getLocations(
+    const accountConfig: I.IAccountConfig = await helper.DB.getAccountConfig(account);
+    const locationsMapping: I.ILocationMapping[] = await helper.DB.getLocations(
         accountConfig.schema_name
     )
-    const customMenusMapping: ICustomMenuMapping[] = await DB.getCustomMenu(
+    const customMenusMapping: I.ICustomMenuMapping[] = await helper.DB.getCustomMenu(
         accountConfig.schema_name
     );
     const baseURL: string = `https://${accountConfig.revel_account}.revelup.com/`;
-    let menus: Menu[] = [];
+    let menus: I.Menu[] = [];
 
     //#region  get data from revel based on customMenu name and establishment
     await Promise.all(
         customMenusMapping.map(async (customMenuMapping) => {
             try {
-                const revelResponse = await Revel.RevelSendRequest({
-                    url: `${baseURL}${SystemUrl.REVELMENU}?establishment=${customMenuMapping.LocationId}&name=${customMenuMapping.MenuName}`,
+                const revelResponse = await helper.Revel.RevelSendRequest({
+                    url: `${baseURL}${enums.SystemUrl.REVELMENU}?establishment=${customMenuMapping.LocationId}&name=${customMenuMapping.MenuName}`,
                     headers: {
                         contentType: "application/json",
                         token: `Bearer ${accountConfig.revel_auth}`,
                     },
-                    method: MethodEnum.GET,
+                    method: enums.MethodEnum.GET,
                 });
 
-                const customMenu: CustomMenu = plainToClass(CustomMenu, revelResponse.data);
+                const customMenu: I.CustomMenu = plainToClass(I.CustomMenu, revelResponse.data);
                 // await validate(menuData, {
                 //   whitelist: true,
                 //   forbidNonWhitelisted: true
                 // })
 
-                const foodbitStoreIds: ILocationMapping = await locationsMapping.find(location => {
+                const foodbitStoreIds: I.ILocationMapping = await locationsMapping.find(location => {
                     if (location.revelId === customMenuMapping.LocationId) {
                         return location
                     } else return null
                 });
 
-                const menu: Menu = {
+                const menu: I.Menu = {
                     revelLocationId: customMenuMapping.LocationId,
                     foodbitStoreId: foodbitStoreIds.foodbitId || null,
                     menuName: customMenuMapping.MenuName,

@@ -2,18 +2,18 @@ import {
   AccountConfigTabel,
   IAccountConfig,
 } from "../Interface/IAccountConfig";
-import { ICategoryMapping, ICategoryMappingTable } from "../Interface/SettingMapping/ICategoryMapping.interface";
-import { CustomMenuTable, ICustomMenuMapping } from "../Interface/SettingMapping/ICustomMenuMapping.interface";
-import { IItemMapping, IItemMappingTable } from "../Interface/SettingMapping/IItemMapping.interface";
-import { ILocationMapping, LocationMappingTable } from "../Interface/SettingMapping/ILocationMapping.interface";
-import { IMenuMapping, IMenuMappingTable } from "../Interface/SettingMapping/IMenuMapping.interface";
-import { IOptionItemMapping, IOptionItemMappingTable } from "../Interface/SettingMapping/IOptionItemMapping.interface";
-import { IOptionSetMapping, IOptionSetMappingTable } from "../Interface/SettingMapping/IOptionSetMapping.interface";
+import { ICategoryMapping, ICategoryMappingTable } from "../Interface/SettingMapping/ICategoryMapping";
+import { CustomMenuTable, ICustomMenuMapping } from "../Interface/SettingMapping/ICustomMenuMapping";
+import { IItemMapping, IItemMappingTable } from "../Interface/SettingMapping/IItemMapping";
+import { ILocationMapping, LocationMappingTable } from "../Interface/SettingMapping/ILocationMapping";
+import { IMenuMapping, IMenuMappingTable } from "../Interface/SettingMapping/IMenuMapping";
+import { IOptionItemMapping, IOptionItemMappingTable } from "../Interface/SettingMapping/IOptionItemMapping";
+import { IOptionSetMapping, IOptionSetMappingTable } from "../Interface/SettingMapping/IOptionSetMapping";
 import { Op } from "sequelize";
-import { CustomerMappingTable, ICustomerMapping } from "../Interface/SettingMapping/ICustomerMapping.interface";
-import { IMenuSyncErrorMapping, IMenuSyncErrorTable } from "../Interface/SettingMapping/IMenuSyncError.interface";
-import { IOrderSyncErrorTable, IOrderSyncErrors } from "../Interface/SettingMapping/IOrderSyncErrors.interface";
-import { IOrderMapping, IOrderMappingTable } from "../Interface/SettingMapping/IOrderMapping.interface";
+import { CustomerMappingTable, ICustomerMapping } from "../Interface/SettingMapping/ICustomerMapping";
+import { IMenuSyncErrorMapping, IMenuSyncErrorTable } from "../Interface/SettingMapping/IMenuSyncError";
+import { IOrderSyncErrorTable, IOrderSyncErrors } from "../Interface/SettingMapping/IOrderSyncErrors";
+import { IOrderMapping, IOrderMappingTable } from "../Interface/SettingMapping/IOrderMapping";
 import { sequelize } from "../sequlizeConfig";
 export class DB {
   public static getAccountConfig = async (

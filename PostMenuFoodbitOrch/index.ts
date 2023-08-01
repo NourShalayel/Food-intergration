@@ -34,7 +34,7 @@ function* orchCallback(context) {
     createMenu['locationsMapping'] = locationsMapping
     if (accountConfig.menu_status === "one") {
         const OneMenuRevel = yield context.df.callActivity('ActivityGetOneMenuRevel', accountName);
-        const menus = OneMenuRevel.data
+        const menus = OneMenuRevel.Revel.data
         createMenu['menu'] = menus
         //one menu
         const categories = yield context.df.callActivity('ActivityCreateOneMenu', createMenu)

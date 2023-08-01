@@ -1,4 +1,4 @@
-import { Header } from "./IHeader.interface";
+import { Header } from "./IHeader";
 
 export interface IRequestInput {
   method: string;

@@ -14,19 +14,21 @@ export const IMenuMappingTable = sequelize.define(
     foodbitStoreId : DataType.STRING,
     createdDate: DataType.STRING,
     updatedDate: DataType.STRING,
+    // establishmentIds:DataType.STRING
   },
   { createdAt: false, updatedAt: false }
 );
 
 export interface IMenuMapping {
-  foodbitId: string;
-  categoryIds?: string;
-  nameEn?: string;
-  nameAr?: string;
-  isDefault?: boolean;
-  isHidden?: boolean;
-  categoriesCount?: string;
-  foodbitStoreId? : string ;
-  createdDate?: string;
-  updatedDate?: string;
+  foodbitId: string
+  categoryIds?: string
+  nameEn?: string
+  nameAr?: string
+  isDefault?: boolean
+  isHidden?: boolean
+  categoriesCount?: string
+  foodbitStoreId? : string 
+  createdDate?: string
+  updatedDate?: string
+  // establishmentIds?:string
 }

@@ -10,19 +10,18 @@
  */
 
 import { AzureFunction, Context } from "@azure/functions"
-import { DB } from "../Helper/DB";
-import { IAccountConfig } from "../Interface/IAccountConfig";
-import { ICustomMenuMapping } from "../Interface/SettingMapping/ICustomMenuMapping.interface";
-import { ILocationMapping } from "../Interface/SettingMapping/ILocationMapping.interface";
+import * as I from '../Interface'
+import * as helper from '../Helper'
+
 
 async function activityFunction(context) {
 
     const account = context.bindingData.account
-    const accountConfig: IAccountConfig = await DB.getAccountConfig(account);
-    const customMenusMapping: ICustomMenuMapping[] = await DB.getCustomMenu(
+    const accountConfig: I.IAccountConfig = await helper.DB.getAccountConfig(account);
+    const customMenusMapping: I.ICustomMenuMapping[] = await helper.DB.getCustomMenu(
         accountConfig.schema_name
     );
-    const locationsMapping: ILocationMapping[] = await DB.getLocations(
+    const locationsMapping: I.ILocationMapping[] = await helper.DB.getLocations(
         accountConfig.schema_name
     )
 

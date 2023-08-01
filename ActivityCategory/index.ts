@@ -11,14 +11,9 @@
 
 import { AzureFunction, Context } from "@azure/functions"
 import moment = require("moment")
-import { EntityType } from "../Common/Enums/EntityType"
-import { DB } from "../Helper/DB"
-import { Foodbit } from "../Helper/Foodbit"
-import { Utils } from "../Helper/Utils"
-import { ICategoryFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface"
-import { Item, ids, splitNameLanguag } from "../Interface/Revel/IMenu.interface"
-import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.interface"
-import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface"
+import * as enums from '../Enums'
+import * as helper from '../Helper'
+import * as I from '../Interface'
 
 const activityFunction: AzureFunction = async function (context: Context) {
 
@@ -31,11 +26,11 @@ const activityFunction: AzureFunction = async function (context: Context) {
     //#region create category if not exist or update 
     console.log("********************* I'm in create Category   *********************")
     //intialize categoryIds  to add category id in array and update this col in menu table  and update vategoryCount 
-    let categoryIds: ids[] = [];
+    let categoryIds: I.ids[] = [];
     let count: number = 0;
 
     //get category from db to check if in db ====> update / else ===> craete 
-    const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schema_name'])
+    const categoriesMapping: I.ICategoryMapping[] = await helper.DB.getCategories(accountConfig['schema_name'])
 
     // loop in array Catgory 
     categories.forEach(async category => {
@@ -45,16 +40,16 @@ const activityFunction: AzureFunction = async function (context: Context) {
             const categoryMapping = categoriesMapping.find((catMapping => catMapping.revelId == category.id.toString()))
 
             // create array to make categoy follow many menu 
-            let menuIds: ids[] = []
+            let menuIds: I.ids[] = []
 
             // get name from revel and spilt by use function to ar / en 
-            const name: splitNameLanguag[] = Utils.splitNameByLanguage(category.name)
+            const name: I.splitNameLanguag[] = helper.Utils.splitNameByLanguage(category.name)
 
             // check if categoryMapping found ===> craete / else update 
             if (categoryMapping === undefined || categoryMapping === null) {
                 // create
                 //preaper array menu 
-                const menu_id: ids = {
+                const menu_id: I.ids = {
                     id: menuId
                 }
                 const FindMenus = menuIds.find(menu => menu.id === menuId);
@@ -63,21 +58,21 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 }
 
                 // payload to post foodbit and create 
-                const categoryFodbit: ICategoryFoodbit = {
+                const categoryFodbit: I.ICategoryFoodbit = {
                     name: {
                         en: name[0].en,
                         ar: name[0].ar,
                     },
                     menus: menuIds,
-                    entityType: EntityType.MENU_CATEGORY,
+                    entityType: enums.EntityType.MENU_CATEGORY,
                     isHidden: false,
                     merchantId: accountConfig.MerchantId
                 }
-                const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.createCategory(accountConfig, categoryFodbit)
+                const foodbitCategoryResponse: I.ICategoryFoodbit = await helper.Foodbit.createCategory(accountConfig, categoryFodbit)
 
 
                 // after create in foodbit , use response and start preaper payload to insert in db 
-                const categoryData: ICategoryMapping = {
+                const categoryData: I.ICategoryMapping = {
                     revelId: category.id.toString(),
                     foodbitId: foodbitCategoryResponse.id,
                     nameEn: foodbitCategoryResponse.name.en || "",
@@ -89,7 +84,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 // add one to count when add new category to save this in data base 
                 count++;
                 const categoiesDB = new Promise((resolve, rejects) => {
-                    DB.insertCategories(accountConfig['schema_name'], categoryData)
+                    helper.DB.insertCategories(accountConfig['schema_name'], categoryData)
                         .then((value) => {
                             resolve(value)
                         }).catch((err) => {
@@ -97,17 +92,17 @@ const activityFunction: AzureFunction = async function (context: Context) {
                         })
                 })
                 // add category in list and add this list in menus table ===> update menus table 
-                const categoryId: ids = {
+                const categoryId: I.ids = {
                     id: categoryData.foodbitId.toString()
                 }
                 categoryIds = [...categoryIds, categoryId];
-                //  DB.updateCategoryIds(accountConfig['schemaName'], categoryIds, count, menuId)
+                //  helper.DB.updateCategoryIds(accountConfig['schemaName'], categoryIds, count, menuId)
             } else {
 
                 // upadte 
                 //get menu array to add if found new menu 
                 menuIds = JSON.parse(categoryMapping.menuId)
-                const menu_id: ids = {
+                const menu_id: I.ids = {
                     id: menuId
                 }
                 const FindMenus = menuIds.find(menu => menu.id === menuId);
@@ -116,7 +111,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 }
 
                 // payload to update category in foodbit 
-                const categoryFodbit: ICategoryFoodbit = {
+                const categoryFodbit: I.ICategoryFoodbit = {
                     name: {
                         en: name[0].en,
                         ar: name[0].ar,
@@ -125,35 +120,35 @@ const activityFunction: AzureFunction = async function (context: Context) {
                     isHidden: false,
                     merchantId: accountConfig['merchant_id']
                 }
-                const foodbitCategoryResponse: ICategoryFoodbit = await Foodbit.updateCategory(accountConfig, categoryFodbit, categoryMapping['foodbitId'])
+                const foodbitCategoryResponse: I.ICategoryFoodbit = await helper.Foodbit.updateCategory(accountConfig, categoryFodbit, categoryMapping['foodbitId'])
 
                 // after update in foodbit ====> update in db 
-                const categoryUpdates: ICategoryMapping = {
+                const categoryUpdates: I.ICategoryMapping = {
                     nameEn: foodbitCategoryResponse.name.en || "",
                     nameAr: foodbitCategoryResponse.name.ar || "",
                     menuId: JSON.stringify(menuIds).toString(),
                     updatedDate: foodbitCategoryResponse.lastUpdated
                 };
-                DB.updateCategories(accountConfig['schema_name'], categoryUpdates, foodbitCategoryResponse.id)
+                helper.DB.updateCategories(accountConfig['schema_name'], categoryUpdates, foodbitCategoryResponse.id)
 
             }
 
         } catch (error) {
 
             var date = Date.now()
-            const errorDetails: IMenuSyncErrorMapping = {
+            const errorDetails: I.IMenuSyncErrorMapping = {
                 revelId: category.id.toString(),
                 message: error.message,
                 syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-                type: EntityType.MENU_CATEGORY
+                type: enums.EntityType.MENU_CATEGORY
             }
-            DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
+            helper.DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
         }
     })
 
 
     // add all item in all category in array and return this array 
-    let productsInAllCategory: Item[] = [];
+    let productsInAllCategory: I.Item[] = [];
 
     await categories.map((category) => {
         productsInAllCategory.push(...category.products);

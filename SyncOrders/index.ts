@@ -1,30 +1,17 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
-import { DB } from "../Helper/DB";
-import { IAccountConfig } from "../Interface/IAccountConfig";
-import { ILocationMapping } from "../Interface/SettingMapping/ILocationMapping.interface";
-import { IOrderFoodbit, optionItem } from "../Interface/Foodbit/IOrderFoodbit.interface";
-import { ICustomerMapping } from "../Interface/SettingMapping/ICustomerMapping.interface";
-import { MethodEnum } from "../Common/Enums/Method.enum";
-import { SystemUrl } from "../Common/Enums/SystemEndPoint";
-import { Revel } from "../Helper/Revel";
-import { CustomerRevel, splitNameSpace } from "../Interface/Revel/ICustomerRevel.interface";
-import { Utils } from "../Helper/Utils";
+import * as I from '../Interface'
+import * as helper from '../Helper'
+import * as enums  from '../Enums'
 import moment = require("moment");
-import { EntityType } from "../Common/Enums/EntityType";
-import { IOrderSyncErrors } from "../Interface/SettingMapping/IOrderSyncErrors.interface";
-import { IDiscount, IItemOrderRevel, IModifierItems, IOrderInfo, IOrderRevel, IPaymentInfo, IServiceFees } from "../Interface/Revel/IOrderRevel.interface";
-import { IItemMapping } from "../Interface/SettingMapping/IItemMapping.interface";
-import { IOptionSetMapping } from "../Interface/SettingMapping/IOptionSetMapping.interface";
-import { IOrderMapping } from "../Interface/SettingMapping/IOrderMapping.interface";
-import { IOptionItemMapping } from "../Interface/SettingMapping/IOptionItemMapping.interface";
+
 
 const SyncOrders: AzureFunction = async function (
     context: Context,
     req: HttpRequest
 ): Promise<any> {
 
-    let data: IOrderFoodbit
-    let accountConfig: IAccountConfig
+    let data: I.IOrderFoodbit
+    let accountConfig: I.IAccountConfig
     const account: string | undefined = req.headers.revelaccount;
 
     if (account == null || account == undefined) {
@@ -43,8 +30,8 @@ const SyncOrders: AzureFunction = async function (
             if (data.type === "DINE_IN") {
 
                 //#region DB Connection
-                accountConfig = await DB.getAccountConfig(account);
-                const locationsMapping: ILocationMapping[] = await DB.getLocations(
+                accountConfig = await helper.DB.getAccountConfig(account);
+                const locationsMapping: I.ILocationMapping[] = await helper.DB.getLocations(
                     accountConfig.schema_name
                 )
                 const baseURL: string = `https://${accountConfig.revel_account}.revelup.com/`;
@@ -53,26 +40,26 @@ const SyncOrders: AzureFunction = async function (
                 //#region get establishment revel from db based store id 
                 let establishmentId: number = 0
 
-                const locationMapping: ILocationMapping = locationsMapping.find((locationMap => locationMap.foodbitId == data.check.storeId))
+                const locationMapping: I.ILocationMapping = locationsMapping.find((locationMap => locationMap.foodbitId == data.check.storeId))
                 if (locationMapping != null || locationMapping != undefined) {
                     establishmentId = locationMapping.revelId
                 }
                 //#endregion
 
                 //#region  get item to add in order
-                const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig.schema_name)
-                const optionsItem: IOptionItemMapping[] = await DB.getOptionItem(accountConfig.schema_name)
-                const itemsRevel: IItemOrderRevel[] = []
+                const itemsMapping: I.IItemMapping[] = await helper.DB.getItems(accountConfig.schema_name)
+                const optionsItem: I.IOptionItemMapping[] = await helper.DB.getOptionItem(accountConfig.schema_name)
+                const itemsRevel: I.IItemOrderRevel[] = []
                 let discount = 0
                 await Promise.all(data.items.map((item) => {
                     let totalModifierPrice = 0
-                    const itemMapping: IItemMapping = itemsMapping.find((itemMap => itemMap.foodbitId == item.id))
+                    const itemMapping: I.IItemMapping = itemsMapping.find((itemMap => itemMap.foodbitId == item.id))
                     if (itemMapping != null || itemMapping != undefined) {
-                        const modifiers: IModifierItems[] = []
+                        const modifiers: I.IModifierItems[] = []
                         item.optionSets.forEach((optionSet) => {
                             optionSet.items.forEach((op) => {
-                                const optionItem: IOptionItemMapping = optionsItem.find((option) => option.foodbitId == op.id)
-                                const modifier: IModifierItems = {
+                                const optionItem: I.IOptionItemMapping = optionsItem.find((option) => option.foodbitId == op.id)
+                                const modifier: I.IModifierItems = {
                                     barcode: optionItem.barcode.toString(),
                                     qty: 1,
                                     modifier_price: op.price
@@ -85,7 +72,7 @@ const SyncOrders: AzureFunction = async function (
                         let priceItem = priceWithoutModifier / item.quantity
                         discount += (item.price - priceItem) * item.quantity
 
-                        const itemRevel: IItemOrderRevel = {
+                        const itemRevel: I.IItemOrderRevel = {
                             quantity: item.quantity,
                             barcode: itemMapping.barcode,
                             price: item.price,
@@ -101,18 +88,18 @@ const SyncOrders: AzureFunction = async function (
 
                 //#region  Customer
 
-                let customerRevel: CustomerRevel = new CustomerRevel();
+                let customerRevel: I.CustomerRevel = new I.CustomerRevel();
                 try {
                     // create customer if not found in database / if found => update 
                     // get customer data 
-                    const customersMapping: ICustomerMapping[] = await DB.getCustomers(
+                    const customersMapping: I.ICustomerMapping[] = await helper.DB.getCustomers(
                         accountConfig.schema_name
                     )
                     const customerMapping = customersMapping.find(customer => customer.foodbitId == data.customerId)
                     //check 
                     if (customerMapping === undefined || customerMapping === null) {
                         // create 
-                        const name: splitNameSpace[] = Utils.splitSpaces(data.customer.name)
+                        const name: I.splitNameSpace[] = helper.Utils.splitSpaces(data.customer.name)
 
                         customerRevel = {
                             first_name: name ? name[0].first_Name : null,
@@ -123,17 +110,17 @@ const SyncOrders: AzureFunction = async function (
                             created_by: accountConfig.revel_user_id,
                             updated_by: accountConfig.revel_user_id
                         }
-                        const customerRevelResponse: CustomerRevel = await Revel.RevelSendRequest({
-                            url: `${baseURL}${SystemUrl.CUSTOMER}`,
+                        const customerRevelResponse: I.CustomerRevel = await helper.Revel.RevelSendRequest({
+                            url: `${baseURL}${enums.SystemUrl.CUSTOMER}`,
                             headers: {
                                 contentType: "application/json",
                                 token: `${accountConfig.revel_auth}`,
                             },
-                            method: MethodEnum.POST,
+                            method: enums.MethodEnum.POST,
                             data: customerRevel
                         });
 
-                        const customerData: ICustomerMapping = {
+                        const customerData: I.ICustomerMapping = {
                             revelId: customerRevelResponse.id,
                             foodbitId: data.customerId,
                             firstName: customerRevelResponse.first_name,
@@ -147,12 +134,12 @@ const SyncOrders: AzureFunction = async function (
                             updated_by: customerRevelResponse.updated_by
                         };
 
-                        DB.insertCustomer(accountConfig.schema_name, customerData)
+                        helper.DB.insertCustomer(accountConfig.schema_name, customerData)
 
                     } else {
                         //update
                         console.log("I'm in update Customer")
-                        const name: splitNameSpace[] = Utils.splitSpaces(data.customer.name)
+                        const name: I.splitNameSpace[] = helper.Utils.splitSpaces(data.customer.name)
 
                         customerRevel = {
                             first_name: name ? name[0].first_Name : null,
@@ -163,17 +150,17 @@ const SyncOrders: AzureFunction = async function (
                             created_by: accountConfig.revel_user_id,
                             updated_by: accountConfig.revel_user_id
                         }
-                        const revelCustomerResponse: CustomerRevel = await Revel.RevelSendRequest({
-                            url: `${baseURL}${SystemUrl.CUSTOMER}/${customerMapping.revelId}/`,
+                        const revelCustomerResponse: I.CustomerRevel = await helper.Revel.RevelSendRequest({
+                            url: `${baseURL}${enums.SystemUrl.CUSTOMER}/${customerMapping.revelId}/`,
                             headers: {
                                 contentType: "application/json",
                                 token: `${accountConfig.revel_auth}`,
                             },
-                            method: MethodEnum.PATCH,
+                            method: enums.MethodEnum.PATCH,
                             data: customerRevel
                         });
 
-                        const customerData: ICustomerMapping = {
+                        const customerData: I.ICustomerMapping = {
                             firstName: revelCustomerResponse.first_name,
                             lastName: revelCustomerResponse.last_name,
                             email: revelCustomerResponse.email,
@@ -185,36 +172,36 @@ const SyncOrders: AzureFunction = async function (
                             updated_by: revelCustomerResponse.updated_by
                         };
 
-                        await DB.updateCustomer(accountConfig.schema_name, customerData, customerMapping.revelId)
+                        await helper.DB.updateCustomer(accountConfig.schema_name, customerData, customerMapping.revelId)
                     }
                 } catch (error) {
                     console.log(`Error in Flow Customer ${error}`)
                     var date = Date.now()
-                    const errorDetails: IOrderSyncErrors = {
+                    const errorDetails: I.IOrderSyncErrors = {
                         foodbitId: data.customerId,
                         message: error.message,
                         syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-                        type: EntityType.CUSTOMER
+                        type: enums.EntityType.CUSTOMER
                     }
-                    await DB.insertOrderSyncError(accountConfig.schema_name, errorDetails)
+                    await helper.DB.insertOrderSyncError(accountConfig.schema_name, errorDetails)
                 }
 
                 //#endregion
 
                 //#region order
 
-                const orderInfo: IOrderInfo = {
+                const orderInfo: I.IOrderInfo = {
                     dining_option: Number(accountConfig.dining_option),
                     customer: customerRevel
                 }
 
-                let discountOrder: IDiscount[] = []
-                const discounts: IDiscount = {
+                let discountOrder: I.IDiscount[] = []
+                const discounts: I.IDiscount = {
                     barcode: accountConfig.discount_barcode,
                     amount: discount
                 }
                 discountOrder.push(discounts)
-                let OrderRevel: IOrderRevel
+                let OrderRevel: I.IOrderRevel
                 if (discount > 0) {
                     OrderRevel = {
                         establishment: establishmentId,
@@ -231,18 +218,18 @@ const SyncOrders: AzureFunction = async function (
                     }
                 }
 
-                const orderRevelResponse = await Revel.RevelSendRequest({
-                    url: `${baseURL}${SystemUrl.ORDER}`,
+                const orderRevelResponse = await helper.Revel.RevelSendRequest({
+                    url: `${baseURL}${enums.SystemUrl.ORDER}`,
                     headers: {
                         contentType: "application/json",
                         token: `${accountConfig.revel_auth}`,
                     },
-                    method: MethodEnum.POST,
+                    method: enums.MethodEnum.POST,
                     data: OrderRevel
                 });
 
                 // insert in db
-                const orderData: IOrderMapping = {
+                const orderData: I.IOrderMapping = {
                     revelId: orderRevelResponse.orderId,
                     foodbitId: data.id,
                     type: data.type,
@@ -252,7 +239,7 @@ const SyncOrders: AzureFunction = async function (
                     dining_option: OrderRevel.orderInfo.dining_option,
                     created_date: orderRevelResponse.created_date
                 };
-                DB.insertOrder(accountConfig.schema_name, orderData)
+                helper.DB.insertOrder(accountConfig.schema_name, orderData)
 
                 context.res = {
                     status: 200,
@@ -279,13 +266,13 @@ const SyncOrders: AzureFunction = async function (
 
             console.log(`Error in Flow Order ${error}`)
             var date = Date.now()
-            const errorDetails: IOrderSyncErrors = {
+            const errorDetails: I.IOrderSyncErrors = {
                 foodbitId: data.id,
                 message: error.message,
                 syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-                type: EntityType.ORDER
+                type: enums.EntityType.ORDER
             }
-            await DB.insertOrderSyncError(accountConfig.schema_name, errorDetails)
+            await helper.DB.insertOrderSyncError(accountConfig.schema_name, errorDetails)
 
             context.res = {
                 status: 500,

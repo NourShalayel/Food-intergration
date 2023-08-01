@@ -1,9 +1,8 @@
-import { splitNameSpace } from "../Interface/Revel/ICustomerRevel.interface";
-import { splitNameLanguag } from "../Interface/Revel/IMenu.interface";
+import * as I from '../Interface'
 
 export class Utils {
 
-  public static splitNameByLanguage(revelName: string): splitNameLanguag[] | null {
+  public static splitNameByLanguage(revelName: string): I.splitNameLanguag[] | null {
     if (!revelName) {
       return null;
     }
@@ -14,7 +13,7 @@ export class Utils {
     const nonEnglishCharsPattern = /[^\x00-\x7F]+/g;
     const nonEnglishParts = revelName.match(nonEnglishCharsPattern) || [];
 
-    const names: splitNameLanguag[] = [{
+    const names: I.splitNameLanguag[] = [{
       en: englishParts.length === 0 ? nonEnglishParts.join(" ") : englishParts.join(" "),
       ar: nonEnglishParts.length === 0 ? englishParts.join(" ") : nonEnglishParts.join(" "),
     }
@@ -23,11 +22,11 @@ export class Utils {
     return names;
   }
 
-  public static splitSpaces(name: string): splitNameSpace[] {
+  public static splitSpaces(name: string): I.splitNameSpace[] {
     console.log(`name ${name}`)
     if(name){
       const [firstName, lastname] = name.split(' ');
-      const names: splitNameSpace[] = [{
+      const names: I.splitNameSpace[] = [{
         first_Name: firstName,
         last_Name:  lastname,
       }]

@@ -1,4 +1,4 @@
-import { CustomerRevel } from "./ICustomerRevel.interface"
+import { CustomerRevel } from "./ICustomerRevel"
 
 export class IOrderRevel {
     establishment: number

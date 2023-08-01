@@ -1,6 +1,6 @@
 import { DataType } from "sequelize-typescript";
 import { sequelize } from "../../sequlizeConfig";
-import { EntityType } from "../../Common/Enums/EntityType";
+import { EntityType } from "../../Enums/EntityType";
 
 
 export const IOrderSyncErrorTable = sequelize.define(

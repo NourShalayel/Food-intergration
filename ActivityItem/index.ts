@@ -11,19 +11,14 @@
 
 import { AzureFunction, Context } from "@azure/functions"
 import moment = require("moment")
-import { EntityType } from "../Common/Enums/EntityType"
-import { DB } from "../Helper/DB"
-import { Foodbit } from "../Helper/Foodbit"
-import { Utils } from "../Helper/Utils"
-import { IItemFoodbit, availability } from "../Interface/Foodbit/IMenuFoodbit.interface"
-import { ids, splitNameLanguag } from "../Interface/Revel/IMenu.interface"
-import { ICategoryMapping } from "../Interface/SettingMapping/ICategoryMapping.interface"
-import { IItemMapping } from "../Interface/SettingMapping/IItemMapping.interface"
-import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface"
+import * as I from '../Interface'
+import * as helper from '../Helper'
+import * as enums  from '../Enums'
+
 
 const activityFunction: AzureFunction = async function (context: Context) {
 
-    await Utils.delay(2000);
+    await helper.Utils.delay(2000);
 
     // get data from orch and previous activity  
     const accountConfig = context.bindingData.data.accountConfig
@@ -35,14 +30,14 @@ const activityFunction: AzureFunction = async function (context: Context) {
     console.log("********************* activity 2 *********************")
 
     // get item from db to check if in db ===> update / else ===> create 
-    const itemsMapping: IItemMapping[] = await DB.getItems(accountConfig['schema_name'])
-    const categoriesMapping: ICategoryMapping[] = await DB.getCategories(accountConfig['schema_name'])
+    const itemsMapping: I.IItemMapping[] = await helper.DB.getItems(accountConfig['schema_name'])
+    const categoriesMapping: I.ICategoryMapping[] = await helper.DB.getCategories(accountConfig['schema_name'])
 
     // add item id in array to update this in table categry 
-    let itemsIds: ids[] = [];
+    let itemsIds: I.ids[] = [];
 
     // get category from db to take category foodbitId to make item fllow this category 
-    const categoryMapping: ICategoryMapping = await categoriesMapping.find(cateMapping => {
+    const categoryMapping: I.ICategoryMapping = await categoriesMapping.find(cateMapping => {
         if (cateMapping.revelId == item.id_category.toString()) {
             return true; // return true to include the categoryMapping in the result
         }
@@ -54,20 +49,20 @@ const activityFunction: AzureFunction = async function (context: Context) {
         const itemMapping = itemsMapping.find((itemMap => itemMap.barcode == item.barcode))
 
         // get name from revel and spilt by use function to ar / en 
-        const name: splitNameLanguag[] = await Utils.splitNameByLanguage(item.name)
-        const description: splitNameLanguag[] = await Utils.splitNameByLanguage(item.description)
-        let menuIds: ids[] = []
+        const name: I.splitNameLanguag[] = await helper.Utils.splitNameByLanguage(item.name)
+        const description: I.splitNameLanguag[] = await helper.Utils.splitNameByLanguage(item.description)
+        let menuIds: I.ids[] = []
 
         // check if itemMapping found ===> update / else create 
         if (itemMapping === undefined || itemMapping === null) {
             //create
-            const availability: availability = {
+            const availability: I.availability = {
                 isHidden: false,
                 isAvailableNow: true,
                 isUnAvailable: false
             }
 
-            const menusId: ids = {
+            const menusId: I.ids = {
                 id: menuId
             }
             const FindIMenus = menuIds.find(menu => menu.id === menuId);
@@ -75,7 +70,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 menuIds.push(menusId);
             }
 
-            const itemFoodbit: IItemFoodbit = {
+            const itemFoodbit: I.IItemFoodbit = {
                 name: {
                     en: name[0].en,
                     ar: name[0].ar,
@@ -84,7 +79,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
                     en: description ? description[0].en : null,
                     ar: description ? description[0].ar : null,
                 },
-                entityType: EntityType.MENU_ITEM,
+                entityType: enums.EntityType.MENU_ITEM,
                 isHidden: false,
                 merchantId: accountConfig.MerchantId,
                 profilePic: item.image,
@@ -94,10 +89,10 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 // calories?:string
                 availability: availability
             }
-            const foodbitItemResponse: IItemFoodbit = await Foodbit.createItem(accountConfig, itemFoodbit)
+            const foodbitItemResponse: I.IItemFoodbit = await helper.Foodbit.createItem(accountConfig, itemFoodbit)
 
             // preaper payload to start insert in db 
-            const itemData: IItemMapping = {
+            const itemData: I.IItemMapping = {
                 revelId: item.id.toString(),
                 foodbitId: foodbitItemResponse.id,
                 nameEn: foodbitItemResponse.name.en || "",
@@ -108,20 +103,20 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 createdDate: foodbitItemResponse.createdDate,
                 menuIds :  JSON.stringify(menuIds).toString()
             };
-            DB.insertItems(accountConfig['schema_name'], itemData)
+            helper.DB.insertItems(accountConfig['schema_name'], itemData)
 
             // add item in list and add this list in category table ===> update category table 
-            const itemId: ids = {
+            const itemId: I.ids = {
                 id: itemData.foodbitId.toString()
             }
             itemsIds = [...itemsIds, itemId];
-            // await DB.updateItemIds(accountConfig['schema_name'], itemsIds, categoryId)
+            // await helper.DB.updateItemIds(accountConfig['schema_name'], itemsIds, categoryId)
         } else {
             //update
 
             
             menuIds = JSON.parse(itemMapping.menuIds)
-            const menusId: ids = {
+            const menusId: I.ids = {
                 id: menuId
             }
             const FindMenus = menuIds.find(menu => menu.id === menuId);
@@ -129,12 +124,12 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 menuIds.push(menusId);
             }
 
-            const availability: availability = {
+            const availability: I.availability = {
                 isHidden: false,
                 isAvailableNow: true,
                 isUnAvailable: false
             }
-            const itemFoodbit: IItemFoodbit = {
+            const itemFoodbit: I.IItemFoodbit = {
                 name: {
                     en: name[0].en,
                     ar: name[0].ar,
@@ -152,8 +147,8 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 // calories?:string
                 availability: availability
             }
-            const foodbitItemResponse: IItemFoodbit = await Foodbit.updateItem(accountConfig, itemFoodbit, itemMapping.foodbitId)
-            const itemData: IItemMapping = {
+            const foodbitItemResponse: I.IItemFoodbit = await helper.Foodbit.updateItem(accountConfig, itemFoodbit, itemMapping.foodbitId)
+            const itemData: I.IItemMapping = {
                 nameEn: foodbitItemResponse.name.en || "",
                 nameAr: foodbitItemResponse.name.ar || "",
                 categoryId: categoryId,
@@ -163,19 +158,19 @@ const activityFunction: AzureFunction = async function (context: Context) {
                 menuIds :  JSON.stringify(menuIds).toString()
             };
 
-            await DB.updateItems(accountConfig['schema_name'], itemData, foodbitItemResponse.id)
+            await helper.DB.updateItems(accountConfig['schema_name'], itemData, foodbitItemResponse.id)
         }
     } catch (error) {
         console.log(`Error in Flow Product ${error}`)
 
         var date = Date.now()
-        const errorDetails: IMenuSyncErrorMapping = {
+        const errorDetails: I.IMenuSyncErrorMapping = {
             revelId: item.id.toString(),
             message: error.message,
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-            type: EntityType.MENU_ITEM
+            type: enums.EntityType.MENU_ITEM
         }
-        await DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
+        await helper.DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
     }
 
 

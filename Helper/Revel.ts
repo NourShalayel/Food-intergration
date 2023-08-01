@@ -1,7 +1,7 @@
 import axios from "axios";
-import { IRequestInput } from "../Interface/IRequest.interface";
+import { IRequestInput } from "../Interface/IRequest";
 import { IAccountConfig } from "../Interface/IAccountConfig";
-import { MethodEnum } from "../Common/Enums/Method.enum";
+import { MethodEnum } from "../Enums/Method";
 
 export class Revel {
   public static RevelSendRequest =  async (req: IRequestInput):Promise<any> => {

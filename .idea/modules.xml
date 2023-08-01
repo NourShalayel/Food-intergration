@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/foodbit-revel.iml" filepath="$PROJECT_DIR$/.idea/foodbit-revel.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/foodbit-helper.Revel.iml" filepath="$PROJECT_DIR$/.idea/foodbit-helper.Revel.iml" />
     </modules>
   </component>
 </project>

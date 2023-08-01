@@ -11,53 +11,46 @@
 
 import { AzureFunction, Context } from "@azure/functions"
 import moment = require("moment")
-import { EntityType } from "../Common/Enums/EntityType"
-import { DB } from "../Helper/DB"
-import { Foodbit } from "../Helper/Foodbit"
-import { Utils } from "../Helper/Utils"
-import { stores, IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface"
-import { splitNameLanguag } from "../Interface/Revel/IMenu.interface"
-import { IMenuMapping } from "../Interface/SettingMapping/IMenuMapping.interface"
-import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface"
-import { IAccountConfig } from "../Interface/IAccountConfig"
-
+import * as helper from '../Helper'
+import * as enums from '../Enums'
+import * as I from '../Interface'
 const activityFunction: AzureFunction = async function (context: Context) {
 
     //#region create menu if not exsit or update 
     // get all menu from database 
 
 
-    const accountConfig: IAccountConfig = context.bindingData.data.accountConfig
+    const accountConfig: I.IAccountConfig = context.bindingData.data.accountConfig
     const locationsMapping = context.bindingData.data.locationsMapping
 
-    const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig.schema_name)
+    const menusMapping: I.IMenuMapping[] = await helper.DB.getMenus(accountConfig.schema_name)
     const menu = context.bindingData.data.menu
     let menuFoodbitId
     let menuName
 
     //check if this menu in database 
     try {
-        const locations: stores[] = locationsMapping.map((location) => ({
+        const locations: I.stores[] = locationsMapping.map((location) => ({
             id: location.foodbitId
         }))
-        const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && (menuMapping.foodbitStoreId == menu.foodbitStoreId) || menuMapping.foodbitStoreId == JSON.stringify(locations).toString())
+        const menuMapping: I.IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && (menuMapping.foodbitStoreId == menu.foodbitStoreId) || menuMapping.foodbitStoreId == JSON.stringify(locations).toString())
         // get name from revel and spilt by use function to ar / en 
-        const name: splitNameLanguag[] = Utils.splitNameByLanguage(menu.menuName)
+        const name: I.splitNameLanguag[] = helper.Utils.splitNameByLanguage(menu.menuName)
         if (menuMapping === undefined || menuMapping === null || !menuMapping) {
 
-            const menuFoodbit: IMenuFoodbit = {
+            const menuFoodbit: I.IMenuFoodbit = {
                 name: {
                     en: name[0].en,
                     ar: name[0].ar,
                 },
                 stores: locations,
                 merchantId: accountConfig.merchant_id,
-                entityType: EntityType.MENU,
+                entityType: enums.EntityType.MENU,
                 isHidden: false
             };
-            const foodbitMenuResponse: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuFoodbit)
+            const foodbitMenuResponse: I.IMenuFoodbit = await helper.Foodbit.createMenu(accountConfig, menuFoodbit)
             //insert in db
-            const menuData: IMenuMapping = {
+            const menuData: I.IMenuMapping = {
                 foodbitId: foodbitMenuResponse.id,
                 nameEn: foodbitMenuResponse.name.en || "",
                 nameAr: foodbitMenuResponse.name.ar || "",
@@ -67,7 +60,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
 
             menuFoodbitId = foodbitMenuResponse.id
             menuName = menu.menuName
-            DB.insertMenus(accountConfig['schema_name'], menuData)
+            helper.DB.insertMenus(accountConfig['schema_name'], menuData)
             return {
                 'categories': menu.categories,
                 'menuId': menuFoodbitId,
@@ -86,13 +79,13 @@ const activityFunction: AzureFunction = async function (context: Context) {
 
         var date = Date.now()
 
-        const errorDetails: IMenuSyncErrorMapping = {
+        const errorDetails: I.IMenuSyncErrorMapping = {
             revelId: menu.menuName,
             message: error.message,
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-            type: EntityType.MENU
+            type: enums.EntityType.MENU
         }
-        await DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
+        await helper.DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
     }
     //#endregion
 };

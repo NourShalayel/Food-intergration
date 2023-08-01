@@ -11,41 +11,36 @@
 
 import { AzureFunction, Context } from "@azure/functions"
 import moment = require("moment");
-import { EntityType } from "../Common/Enums/EntityType";
-import { DB } from "../Helper/DB";
-import { Foodbit } from "../Helper/Foodbit";
-import { Utils } from "../Helper/Utils";
-import { IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
-import { splitNameLanguag } from "../Interface/Revel/IMenu.interface";
-import { IMenuMapping } from "../Interface/SettingMapping/IMenuMapping.interface";
-import { IMenuSyncErrorMapping } from "../Interface/SettingMapping/IMenuSyncError.interface";
+import * as helper from '../Helper'
+import * as enums from '../Enums'
+import * as I from '../Interface'
 
 const activityFunction: AzureFunction = async function (context: Context) {
     const accountConfig = context.bindingData.data.accountConfig
-    const menusMapping: IMenuMapping[] = await DB.getMenus(accountConfig['schema_name'])
+    const menusMapping: I.IMenuMapping[] = await helper.DB.getMenus(accountConfig['schema_name'])
     const menu = context.bindingData.data.menu
     let menuFoodbitId
     let menuName
     //#region create menu if not exsit or update 
     
     try {
-        const menuMapping: IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
+        const menuMapping: I.IMenuMapping = menusMapping.find(menuMapping => menuMapping.nameEn == menu.menuName && menuMapping.foodbitStoreId == menu.foodbitStoreId)
         // get name from revel and spilt by use function to ar / en 
-        const name: splitNameLanguag[] = Utils.splitNameByLanguage(menu.menuName)
+        const name: I.splitNameLanguag[] = helper.Utils.splitNameByLanguage(menu.menuName)
         if (menuMapping === undefined || menuMapping === null || !menuMapping) {
-            const menuFoodbit: IMenuFoodbit = {
+            const menuFoodbit: I.IMenuFoodbit = {
                 name: {
                     en: name[0].en,
                     ar: name[0].ar,
                 },
                 stores: [{ id: menu.foodbitStoreId }],
                 merchantId: accountConfig.MerchantId,
-                entityType: EntityType.MENU,
+                entityType: enums.EntityType.MENU,
                 isHidden: false
             };
-            const foodbitMenuResponse: IMenuFoodbit = await Foodbit.createMenu(accountConfig, menuFoodbit)
+            const foodbitMenuResponse: I.IMenuFoodbit = await helper.Foodbit.createMenu(accountConfig, menuFoodbit)
             //insert in db
-            const menuData: IMenuMapping = {
+            const menuData: I.IMenuMapping = {
                 foodbitId: foodbitMenuResponse.id,
                 nameEn: foodbitMenuResponse.name.en || "",
                 nameAr: foodbitMenuResponse.name.ar || "",
@@ -55,7 +50,7 @@ const activityFunction: AzureFunction = async function (context: Context) {
             menuFoodbitId = foodbitMenuResponse.id
             menuName = menu.menuName
             new Promise((resolve, rejects) => {
-                DB.insertMenus(accountConfig['schema_name'], menuData)
+                helper.DB.insertMenus(accountConfig['schema_name'], menuData)
                     .then((value) => {
                         resolve(value)
                     }).catch((err) => {
@@ -81,13 +76,13 @@ const activityFunction: AzureFunction = async function (context: Context) {
 
         var date = Date.now()
 
-        const errorDetails: IMenuSyncErrorMapping = {
+        const errorDetails: I.IMenuSyncErrorMapping = {
             revelId: menu.menuName,
             message: error.message,
             syncDate: (moment(date)).format('YYYY-MM-DD HH:mm:ss').toString(),
-            type: EntityType.MENU
+            type: enums.EntityType.MENU
         }
-        await DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
+        await helper.DB.insertMenuSyncError(accountConfig['schema_name'], errorDetails)
     }
     //#endregion
 

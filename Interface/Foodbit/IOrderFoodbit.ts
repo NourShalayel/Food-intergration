@@ -119,7 +119,7 @@ export interface meta {
 //         "toGo": false,
 //         "total": 43,
 //         "price": 12,
-//         "profilePic": "https://safary.foodbit.io/stores/lacabine/d55c36ae-f7b2-41e8-945a-c6bca1a7686d.jpeg",
+//         "profilePic": "https://safary.helper.Foodbit.io/stores/lacabine/d55c36ae-f7b2-41e8-945a-c6bca1a7686d.jpeg",
 //         "isHidden": false,
 //         "optionSets": [
 //           {
