@@ -1,4 +1,4 @@
-import { IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
+import { ICategoryFoodbit, IMenuFoodbit } from "../Interface/Foodbit/IMenuFoodbit.interface";
 import {
   AccountConfigTabel,
   IAccountConfig,
@@ -156,6 +156,37 @@ export class DB {
       menus.save();
 
       return menus;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  };
+
+
+  public static insertCategories = async (
+    schemaName: string,
+    categoriesData: ICategoryFoodbit ,
+    menuId : string 
+  ): Promise<any> => {
+    try {
+
+      const categoryData: ICategoryMapping = {
+        revelId: "",
+        foodbitId: categoriesData.id,
+        nameEn: categoriesData.name.en,
+        nameAr: categoriesData.name.ar,
+        menuId: menuId,
+        createdDate: categoriesData.createdDate
+      };
+      const menu = ICategoryMappingTable.schema(schemaName);
+      //get data after posting and insert in database 
+      const data: ICategoryMapping = JSON.parse(JSON.stringify(categoryData));
+      // use sequlize to create
+
+      const categories  = await menu.create({ ...data });
+      categories.save();
+
+      return categories;
     } catch (error) {
       console.error(error);
       return error;

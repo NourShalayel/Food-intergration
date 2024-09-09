@@ -1,13 +1,16 @@
+import { EntityType } from "../../Common/Enums/EntityType"
+import { MethodEnum } from "../../Common/Enums/Method.enum"
+
 export interface IMenuFoodbit {
-    id? : string 
+    id?: string
     name: names
     merchantId: string
-    entityType: string
+    entityType: EntityType
     isHidden?: boolean
-    availability?: availability 
-    createdDate? : string 
-    position? : number 
-    categories? : []
+    availability?: availability
+    createdDate?: string
+    position?: number
+    categories?: ICategoryFoodbit[]
 }
 
 interface names {
@@ -21,6 +24,24 @@ interface availability {
     isUnAvailable: boolean;
 }
 
+
+export interface ICategoryFoodbit {
+    id?: string;
+    createdDate?: string;
+    lastUpdated?: string;
+    availability?: availability
+    merchantId?: string;
+    nameEn?: string;
+    name: names;
+    menus?: menus[];
+    entityType?: EntityType;
+    isHidden?: boolean
+}
+
+// if i need to add categories in many menu 
+interface menus {
+    id: string;
+}
 // {
 //     "availability": {
 //       "isHid ;den": false,
