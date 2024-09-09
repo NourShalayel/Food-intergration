@@ -16,6 +16,7 @@
     "class-validator": "^0.14.0",
     "deserialize-json-api": "^1.4.0",
     "dotenv": "^16.0.3",
+    "durable-functions": "^2.1.2",
     "json2typescript": "^1.5.1",
     "knex": "^2.4.2",
     "lodash": "^4.17.21",

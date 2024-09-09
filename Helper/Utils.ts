@@ -1,26 +1,45 @@
-import { MethodEnum } from "../Common/Enums/Method.enum";
-import { SystemUrl } from "../Common/Enums/SystemEndPoint";
-import { IAccountConfig } from "../Interface/IAccountConfig";
-import { Foodbit } from "./Foodbit";
-import { Revel } from "./Revel";
+import * as I from '../Interface'
 
 export class Utils {
 
+  public static splitNameByLanguage(revelName: string): I.splitNameLanguag[] | null {
+    if (!revelName) {
+      return null;
+    }
 
-  // public static spiltNameByLanguage(revelName : string) : string[] {
-  
-  //   if (!Boolean(revelName)) return null ;
-  //   const englishCharsPattern = "[\x00-\x7F]+" ;
-  //   const englishName =  Regex.Matches(revelName, englishCharsPattern)
-  //                               .OfType<Match>()
-  //                               .Where(m => !string.IsNullOrWhiteSpace(m.Groups[0].Value))
-  //                               .Select(m => m.Groups[0].Value.Trim())
-  //                               .ToArray();
+    const englishCharsPattern = /[\x00-\x7F]+/g;
+    const englishParts = revelName.match(englishCharsPattern)?.filter((part) => !!part.trim()) || [];
 
+    const nonEnglishCharsPattern = /[^\x00-\x7F]+/g;
+    const nonEnglishParts = revelName.match(nonEnglishCharsPattern) || [];
 
-  //   return 
-  // }
+    const names: I.splitNameLanguag[] = [{
+      en: englishParts.length === 0 ? nonEnglishParts.join(" ") : englishParts.join(" "),
+      ar: nonEnglishParts.length === 0 ? englishParts.join(" ") : nonEnglishParts.join(" "),
+    }
+    ];
+
+    return names;
+  }
+
+  public static splitSpaces(name: string): I.splitNameSpace[] {
+    console.log(`name ${name}`)
+    if(name){
+      const [firstName, lastname] = name.split(' ');
+      const names: I.splitNameSpace[] = [{
+        first_Name: firstName,
+        last_Name:  lastname,
+      }]
+      console.log(`names ${names}`)
+      return names
+    }
+  }
+
+  public static delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
+}
+
 
 
 // public static List<string> spiltNameByLanguage(string revelName)
